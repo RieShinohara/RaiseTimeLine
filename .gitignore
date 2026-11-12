@@ -1,0 +1,51 @@
+# 秘密・環境ごとの設定（見本は .env.example）
+.env
+.env.*
+!.env.example
+
+# Claude Code（.claude/skills/ と .claude/settings.json はコミットする。settings.local.json は個人用なので、除外のまま）
+.claude/*
+!.claude/skills/
+!.claude/settings.json
+
+# Terraform の状態ファイルと変数ファイル（パスワードなどの秘密が入ることがある）
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+crash.log
+crash.*.log
+.terraformrc
+terraform.rc
+
+# データベースの中身・書き出し
+*.sql
+*.dump
+
+# ユーザーがアップロードした画像（個人の写真が入るので、リポジトリに入れない）
+uploads/
+/backend/uploads/
+
+# ビルドの成果物・部品（作り直せる）
+node_modules/
+dist/
+build/
+.gradle/
+backend/build/
+frontend/dist/
+coverage/
+*.class
+*.log
+
+# エディタ・OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# SSH の秘密鍵（念のため）
+id_ed25519
+id_rsa
+*.pem

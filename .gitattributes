@@ -1,0 +1,4 @@
+# サーバー（Linux）に送る物は、Windows でも、改行を LF にそろえる
+# （CRLF のままだと、シェルスクリプトが動かない）
+*.sh text eol=lf
+deploy/** text eol=lf
