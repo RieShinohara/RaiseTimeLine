@@ -20,5 +20,8 @@
 | UC-10 | ユーザーをフォローする・解除する | [07 プロフィール・フォロー](features/07-profile-follow.md) |
 | UC-11 | 自分のプロフィールを編集する | [07 プロフィール・フォロー](features/07-profile-follow.md) |
 | UC-12 | ユーザーを検索する | [08 ユーザー検索](features/08-user-search.md) |
+| UC-13 | コメントに返信する | [05 コメント](features/05-comment.md) |
+| UC-14 | コメント・返信を削除する | [05 コメント](features/05-comment.md) |
+| UC-15 | いいねした人の一覧を見る | [06 いいね](features/06-like.md) |
 
 画像（[03 画像](features/03-image.md)）は、UC-3 と UC-11 の中で使う（独立したユースケースは、ない）。
