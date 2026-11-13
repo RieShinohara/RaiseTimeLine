@@ -23,5 +23,6 @@
 | UC-13 | コメントに返信する | [05 コメント](features/05-comment.md) |
 | UC-14 | コメント・返信を削除する | [05 コメント](features/05-comment.md) |
 | UC-15 | いいねした人の一覧を見る | [06 いいね](features/06-like.md) |
+| UC-16 | フォロー中・フォロワーの一覧を見る | [07 プロフィール・フォロー](features/07-profile-follow.md) |
 
 画像（[03 画像](features/03-image.md)）は、UC-3 と UC-11 の中で使う（独立したユースケースは、ない）。
