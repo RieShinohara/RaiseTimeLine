@@ -22,11 +22,11 @@
 ## 3. ドキュメント構成
 | ドキュメント | 概要 |
 |---|---|
-| [機能一覧](functional-requirements.md) | 機能の概要（入口）。最初に作る機能、将来追加する機能、対象外、未決の点の件数 |
+| [機能一覧](features.md) | 機能の概要（入口）。最初に作る機能、将来追加する機能、対象外、未決の点の件数 |
 | [機能定義書](features/)（8 つ） | 機能ごとの詳細：[認証](features/01-auth.md)、[投稿](features/02-post.md)、[画像](features/03-image.md)、[タイムライン](features/04-timeline.md)、[コメント](features/05-comment.md)、[いいね](features/06-like.md)、[プロフィール・フォロー](features/07-profile-follow.md)、[ユーザー検索](features/08-user-search.md)。各定義書に、操作の流れ（ユースケース）と未決の点がある |
 | [ユースケース](use-cases.md) | 操作の流れの一覧表（UC-1〜16。詳しい流れは、各機能定義書） |
 | [非機能要件](non-functional-requirements.md) | 動作環境、データの保存、性能、セキュリティ、個人情報、権利 |
-| [データ設計](data-design.md) | 保存するデータの構造（ER 図） |
+| [データ設計](database-design.md) | 保存するデータの構造（ER 図） |
 | [技術スタック](tech-stack.md) | 使用する技術（TaskManagement と同じ） |
 | 画面設計（これから） | 各画面の構成 |
 | AWS の構成（これから） | 構成図（EC2・RDS・ロードバランサー・S3）。要件定義の段階で、先に作る |
@@ -41,7 +41,7 @@
 - 投稿やコメントのユーザー名から、プロフィールへ移動し、フォローできる
 - **作らない**：インプレッション数の表示、リツイート（再投稿）
 
-機能の詳細は [機能一覧](functional-requirements.md) を参照。
+機能の詳細は [機能一覧](features.md) を参照。
 
 ## 5. 受け入れ条件（完成の基準）【ドラフト。未決の点が決まったら、見直す】
 ### 5.1 ユーザー
