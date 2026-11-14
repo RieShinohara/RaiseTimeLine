@@ -1,6 +1,6 @@
 # 技術スタック
 
-講義の内容に従う。**1本目（TaskManagement）と同じ技術で、バージョンも同じ**（講義の指示。2026-11-12）。下の版は、TaskManagement で確かめた版（`TaskManagement/docs/tech-stack.md`）。**環境構築の時点で、動くことを確かめて、確定する。**
+講義の内容に従う。**1本目（TaskManagement）と同じ技術で、バージョンも同じ**（講義の指示。2026-11-12）。ただし、**UI の部品だけは、Tailwind CSS をやめて、Material UI にする**（2026-11-14 ユーザーが決定。下の「4」）。下の版は、TaskManagement で確かめた版（`TaskManagement/docs/tech-stack.md`）。**環境構築の時点で、動くことを確かめて、確定する。**
 
 ## 1. 決まっている条件
 - 複数のユーザーが使う SNS アプリ（ログイン・ユーザー登録あり）
@@ -18,7 +18,7 @@
 | DB の構造の管理 | Flyway | `ddl-auto` は `validate` |
 | 画面 | React 19.3.1 ＋ TypeScript 7.0.2 | |
 | 画面のビルド | Vite 8.3.4 | |
-| スタイル | Tailwind CSS 4.3.3 | |
+| UI の部品・見た目 | **Material UI**（`@mui/material`） | TaskManagement の Tailwind CSS からの変更。**版は、環境構築のとき、React・TypeScript との組み合わせを確かめて決める**（先生は 7） |
 | 画面のテスト | Vitest 5.0.4 | |
 | Node.js | 24 LTS（24.22.1） | |
 | 画面側の静的チェック・整形 | oxlint・Prettier 3.9.10 | |
@@ -33,3 +33,22 @@
 - 認証（ログイン）の方式、パスワードの扱い
 - 画像のアップロードと S3（保存先、公開・非公開、サイズ・種類の制限）
 - ロードバランサー（費用が大きい。使う範囲）
+
+## 4. 講義の先生の構成との違い（2026-11-14。ユーザーがスクリーンショットで確認）
+先生の技術スタックは、次のとおり。**私たちは、UI の部品を先生にそろえ、ほかの版は、TaskManagement のままにする**（ユーザー決定）。
+
+| 項目 | 先生 | 私たち | 決めた方針 |
+|---|---|---|---|
+| UI の部品 | Material UI 7 | Material UI（版は環境構築で確定） | **先生にそろえる**。Tailwind CSS は、使わない（Material UI と役割が重なり、設定の衝突が起きやすいため） |
+| React | 19.2.x | 19.3.1 | TaskManagement のまま |
+| TypeScript | 5.9.x | 7.0.2 | TaskManagement のまま |
+| Vite | 7.3.x | 8.3.4 | TaskManagement のまま |
+| Spring Boot | 4.0.3 | 4.1.1 | TaskManagement のまま |
+| Gradle | 9.3.1 | 9.8.1 | TaskManagement のまま |
+| PostgreSQL | 17 | 18 | TaskManagement のまま |
+| Java | 25 | 25 | 同じ |
+| 配置 | AWS（EC2・RDS・ALB・S3）、Terraform、Nginx、systemd | 同じ種類 | 同じ |
+
+- **版を新しいまま使う理由**：1本目・2本目で、動かした実績がある。ただし、講義の画面と、細かい所で違いが出ることがある（エラーのときは、版の違いを疑う。メンターには、使っている版を伝える）
+- **Material UI の版**：Material UI は、React・TypeScript の版と、組み合わせの相性がある。環境構築のとき、動くことを確かめて決め、この文書を更新する
+- Material UI は、1本目の Tailwind CSS の代わり。2本目（BizRequestTracker）で使った Vuetify と、同じ種類（Material Design の部品集）の、React 版

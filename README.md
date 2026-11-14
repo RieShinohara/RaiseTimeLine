@@ -41,12 +41,12 @@ AIエンジニア養成コースの課題として作る、3本目の個人開�
 |---|---|
 | バックエンド | Java、Spring Boot、Gradle |
 | データベース | PostgreSQL（Docker） |
-| 画面 | React、TypeScript、Vite、Tailwind CSS |
+| 画面 | React、TypeScript、Vite、Material UI（部品集） |
 | 画像の保存 | AWS S3 |
 | インフラ（予定。変わるかもしれません） | AWS（EC2・RDS・ロードバランサー・S3）、Terraform |
 | 自動化 | GitHub Actions（CI） |
 
-1本目（TaskManagement）と、同じ技術・同じバージョンです。詳しくは [技術スタック](docs/tech-stack.md) に書いています。
+1本目（TaskManagement）と、同じ技術・同じバージョンです。ただし、見た目の部品は、Tailwind CSS ではなく、**Material UI** にしました（講義にそろえた変更）。詳しくは [技術スタック](docs/tech-stack.md) に書いています。
 
 ## 作り方の特徴
 
