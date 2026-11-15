@@ -1,0 +1,9 @@
+# 整形しないもの
+dist
+coverage
+node_modules
+package-lock.json
+# 画面に出す、そのままの静的ファイル（画像など）
+public
+# 文書は、整形しない（日本語の表などが崩れるため）
+*.md
