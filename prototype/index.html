@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RaiseTimeLine プロトタイプ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="appbar">
+    <div class="appbar-inner">
+      <a class="logo" href="#/">RaiseTimeLine</a>
+      <div class="search">
+        <input id="search-input" type="search" placeholder="ユーザーを検索" maxlength="50" autocomplete="off">
+        <button class="btn text" data-action="search">検索</button>
+      </div>
+      <nav id="auth-area" class="auth-area"></nav>
+    </div>
+  </header>
+
+  <!-- 画面は、app.js が、ここに表示する -->
+  <main id="view" class="container"></main>
+
+  <footer class="container footer">
+    <p>これは<strong>使い捨てのプロトタイプ</strong>です。データは、このブラウザの中（localStorage）にだけ保存され、サーバーやデータベースは、まだ使っていません。サンプルのユーザー・投稿は、すべて架空です。</p>
+    <p>お試し用のアカウント：<code>user1@example.com</code> ／ パスワード <code>password1</code>（user2〜user5 も同じパスワード）</p>
+    <div id="dev"></div>
+  </footer>
+
+  <!-- 確認メッセージなどの窓 -->
+  <div id="overlay" hidden><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
