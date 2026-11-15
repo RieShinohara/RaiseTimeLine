@@ -12,7 +12,7 @@
 - **技術**：1本目（TaskManagement）と同じ。バックエンドは Java + Spring Boot + Gradle、DB は PostgreSQL（Docker）、画面は React（TypeScript、Vite、**Material UI**）。**UI の部品だけは、TaskManagement の Tailwind CSS をやめて、Material UI にする**（2026-11-14 ユーザーが決定。講義の先生の構成にそろえた。Tailwind は使わない）。**DB の操作は、Spring Data JPA ではなく、MyBatis**（2026-11-14 ユーザーが決定。講義にそろえた）。**認証は、JWT ＋ Spring Security**。**バージョンは、TaskManagement と同じ**（先生の版とは違う。Material UI・MyBatis の版は、環境構築で確かめて決める）（詳しくは [docs/tech-stack.md](docs/tech-stack.md)）。画像の保存先は AWS S3（クラウド）
 - **インフラ（予定。途中で変わるかもしれない）**：AWS。EC2・RDS・ロードバランサー・S3。要件定義の段階で、先に構成図を作る
 - **文書の作り方**：これまでのアプリと同じ。要件定義書（入口は `docs/requirements.md`）、**機能一覧は、別のファイル**、機能が複雑なので、**機能ごとの「機能定義書」**を作ってよい（`docs/features/`）
-- **状況（2026-11-12）**：土台（このファイル、スキル、設定）を作り、GitHub 側の設定（ブランチ保護など）も済んだ段階。要件定義は、これから
+- **状況（2026-11-15）**：要件定義（機能定義書・DB 設計・インフラ構成）と、画面のプロトタイプが終わり、**バックエンドの土台と CI（backend）ができた**段階。次は、画面の土台（React・Material UI）、スキルのこのアプリ用への修正、認証（バックエンド先）。作る順番は [機能一覧](docs/features.md)
 - 構成（予定）：`docs/`（要件定義）、`backend/`、`frontend/`、`terraform/`、`prototype/`（使い捨ての試作。作るなら）、`notes/`（学習ノート）
 
 ## 2. ユーザーへの接し方
@@ -85,7 +85,8 @@
 
 ### 3.7 GitHub側の設定
 - **設定済み**（2026-11-12。ユーザー承認）：マージしたら、PR のブランチを自動で削除する（`delete_branch_on_merge`）。`main` ブランチの保護（PR が必須、強制 push と削除の禁止、管理者にも適用、承認は 0 人）
-- **まだ**：CI の必須チェック（CI ができたら、ユーザーの承認をもらって足す）
+- **設定済み**（2026-11-15。ユーザー承認）：CI の必須チェック `backend（gradlew check）`（PR が緑でないと、マージできない）。**画面（frontend）と Terraform のジョブができたら、ユーザーの承認をもらって、必須チェックに足す**
+- 必須チェックだけを外したいときは、保護の設定を読んで、`required_status_checks` を除いて、`gh api -X PUT repos/RieShinohara/RaiseTimeLine/branches/main/protection` で入れ直す（読み方は下）
 - 保護の戻し方：`gh api -X DELETE repos/RieShinohara/RaiseTimeLine/branches/main/protection`
 - **保護の設定を変えるときは、変更内容と戻し方を説明して、ユーザーの承認を得てから行う。** 設定の内容は、`gh api repos/RieShinohara/RaiseTimeLine/branches/main/protection` で読める
 - **`ci.yml` のジョブの `name` を変えると、必須チェックが「見つからない」状態になり、永遠に待つ**。変えるときは、GitHub 側の設定も、同時に直す
