@@ -49,7 +49,7 @@
         { id: 9, userId: 4, body: 'いいねの数を押すと、いいねした人の一覧が見られます。', hasImage: false, createdAt: ago(40), updatedAt: null },
         { id: 10, userId: 5, body: 'ログインしなくても、タイムラインは見られます。投稿やいいねは、ログインが必要。', hasImage: false, createdAt: ago(25), updatedAt: null },
         { id: 11, userId: 1, body: '検索は、ユーザー名と表示名の両方で探せます。「たろう」で試してみてください。', hasImage: false, createdAt: ago(10), updatedAt: null },
-        { id: 12, userId: 2, body: '「フォロー中」のタイムラインには、自分の投稿も入ります。', hasImage: false, createdAt: ago(3), updatedAt: null },
+        { id: 12, userId: 2, body: '「フォロー中」のタイムラインには、フォローした人の投稿だけが出ます。自分の投稿は、「全体」とプロフィールで見られます。', hasImage: false, createdAt: ago(3), updatedAt: null },
       ],
       comments: [
         { id: 20, postId: 1, userId: 2, parentId: null, body: 'はじめまして！', createdAt: ago(280) },
@@ -186,12 +186,14 @@
   function timelinePosts() {
     const m = me();
     let list = S.posts.slice();
-    if (ui.tab === 'following' && m) { const ids = new Set([...followingOf(m.id), m.id]); list = list.filter((p) => ids.has(p.userId)); }
+    if (ui.tab === 'following' && m) { const ids = new Set(followingOf(m.id)); list = list.filter((p) => ids.has(p.userId)); }   // フォローした人の投稿だけ（自分の投稿は入れない。TL-1）
     return list.sort(byNewest);
   }
   function listHtml(posts) {
     const shown = posts.slice(0, ui.limit);
-    if (!posts.length) return '<div class="card empty">まだ投稿がありません</div>';
+    if (!posts.length) return ui.tab === 'following' && ui.mode === 'timeline'
+      ? '<div class="card empty">フォローしている人の投稿は、まだありません。<br>気になる人を、ユーザー検索で探して、フォローしてみましょう。</div>'
+      : '<div class="card empty">まだ投稿がありません</div>';
     return shown.map((p) => postCard(p)).join('') + (posts.length > shown.length ? '<div id="sentinel"></div><div class="empty small">読み込み中…</div>' : '<div class="empty small">これ以上ありません</div>');
   }
 
@@ -380,6 +382,8 @@
       if ([...body].length > 280) { setErr('post-err', '280 文字までです'); return; }
       S.posts.push({ id: nextId(), userId: me().id, body, hasImage: withImage, createdAt: new Date().toISOString(), updatedAt: null });
       withImage = false; save(); render();
+      // 「フォロー中」は、自分の投稿を入れないので、投稿したのに見えない。そこで、お知らせを出す
+      if (ui.tab === 'following') toast('投稿しました。「全体」と、自分のプロフィールで見られます');
     },
     'edit-post'(el) { ui.editingPost = Number(el.dataset.id); render(); },
     'edit-cancel'() { ui.editingPost = null; render(); },
