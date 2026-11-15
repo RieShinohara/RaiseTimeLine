@@ -15,7 +15,7 @@
 | ビルド（サーバー側） | Gradle 9.8.1（Gradle Wrapper） | |
 | DB | PostgreSQL 18（開発は Docker） | |
 | DB への接続 | **MyBatis**（`mybatis-spring-boot-starter`）＋ PostgreSQL ドライバ | TaskManagement の Spring Data JPA からの変更（2026-11-14 ユーザー決定。講義にそろえ、SQL を自分で書く経験をする）。**版は、環境構築のとき、Spring Boot 4.1.1 との組み合わせを確かめて決める** |
-| 認証 | **Spring Security ＋ JWT**（`jjwt`）。パスワードは BCrypt | 2026-11-14 決定（[01 認証](features/01-auth.md) 3.5）。JWT の署名の鍵は、リポジトリに入れない |
+| 認証 | **Spring Security ＋ JWT**（`jjwt`）。パスワードは BCrypt | 2026-11-14 決定、2026-11-15 更新（[01 認証](features/01-auth.md) 3.5）。**アクセストークン 15 分 ＋ リフレッシュトークン 7 日**（リフレッシュは UUID で DB に保存）。JWT の署名の鍵は、リポジトリに入れない |
 | DB の構造の管理 | Flyway | `ddl-auto` は `validate` |
 | 画面 | React 19.3.1 ＋ TypeScript 7.0.2 | |
 | 画面のビルド | Vite 8.3.4 | |
