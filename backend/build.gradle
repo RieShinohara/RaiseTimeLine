@@ -1,0 +1,68 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.1.1'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
+	id 'checkstyle'
+	id 'com.github.spotbugs' version '6.5.13'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+description = 'RaiseTimeLine backend'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	// DB の操作は MyBatis（JPA は使わない）。版は、Spring Boot 4.1.1 で動くことを確かめて決めた
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.1.0'
+	runtimeOnly 'org.flywaydb:flyway-database-postgresql'
+	runtimeOnly 'org.postgresql:postgresql'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:4.1.0'
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+	testImplementation 'org.testcontainers:testcontainers-postgresql'
+	testImplementation 'com.tngtech.archunit:archunit-junit5:1.5.1'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+	finalizedBy 'jacocoTestReport'
+}
+
+// テストで、どのコードが実行されたか（カバレッジ）を測る。数値の下限は、まだ決めない（測るだけ）
+jacoco {
+	toolVersion = '0.8.15'
+}
+
+// 書き方のチェック。規則は config/checkstyle/checkstyle.xml。違反が1つでもあれば失敗にする
+checkstyle {
+	toolVersion = '14.3.0'
+	maxWarnings = 0
+}
+
+// バグになりやすい書き方のチェック。除外は config/spotbugs/exclude.xml
+spotbugs {
+	toolVersion = '4.10.5'
+	excludeFilter = file('config/spotbugs/exclude.xml')
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+	reports {
+		html.required = true
+	}
+}
