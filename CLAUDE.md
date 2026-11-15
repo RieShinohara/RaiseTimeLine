@@ -12,7 +12,7 @@
 - **技術**：1本目（TaskManagement）と同じ。バックエンドは Java + Spring Boot + Gradle、DB は PostgreSQL（Docker）、画面は React（TypeScript、Vite、**Material UI**）。**UI の部品だけは、TaskManagement の Tailwind CSS をやめて、Material UI にする**（2026-11-14 ユーザーが決定。講義の先生の構成にそろえた。Tailwind は使わない）。**DB の操作は、Spring Data JPA ではなく、MyBatis**（2026-11-14 ユーザーが決定。講義にそろえた）。**認証は、JWT ＋ Spring Security**。**バージョンは、TaskManagement と同じ**（先生の版とは違う。Material UI・MyBatis の版は、環境構築で確かめて決める）（詳しくは [docs/tech-stack.md](docs/tech-stack.md)）。画像の保存先は AWS S3（クラウド）
 - **インフラ（予定。途中で変わるかもしれない）**：AWS。EC2・RDS・ロードバランサー・S3。要件定義の段階で、先に構成図を作る
 - **文書の作り方**：これまでのアプリと同じ。要件定義書（入口は `docs/requirements.md`）、**機能一覧は、別のファイル**、機能が複雑なので、**機能ごとの「機能定義書」**を作ってよい（`docs/features/`）
-- **状況（2026-11-15）**：要件定義（機能定義書・DB 設計・インフラ構成）と、画面のプロトタイプが終わり、**バックエンドの土台と CI（backend）ができた**段階。次は、画面の土台（React・Material UI）、スキルのこのアプリ用への修正、認証（バックエンド先）。作る順番は [機能一覧](docs/features.md)
+- **状況（2026-11-15）**：要件定義・画面のプロトタイプ・バックエンドと画面の土台・CI（必須チェック 2 つ）・スキルの修正が終わり、**認証のバックエンド（登録・ログイン・リフレッシュ・ログアウト）ができた**段階。次は、認証の画面 → 品質チェック → タイムラインと投稿…と、**講義の順**に進める（ユーザーの指示）。作る順番は [機能一覧](docs/features.md) の X-2
 - 構成（予定）：`docs/`（要件定義）、`backend/`、`frontend/`、`terraform/`、`prototype/`（使い捨ての試作。作るなら）、`notes/`（学習ノート）
 
 ## 2. ユーザーへの接し方
