@@ -19,7 +19,7 @@
 | DB の構造の管理 | Flyway | `ddl-auto` は `validate` |
 | 画面 | React 19.3.1 ＋ TypeScript 7.0.2 | |
 | 画面のビルド | Vite 8.3.4 | |
-| UI の部品・見た目 | **Material UI**（`@mui/material`） | TaskManagement の Tailwind CSS からの変更。**版は、環境構築のとき、React・TypeScript との組み合わせを確かめて決める**（先生は 7） |
+| UI の部品・見た目 | **Material UI**（`@mui/material`） | TaskManagement の Tailwind CSS からの変更。**版は 9.5.0 に確定**（2026-11-15。最新。React 19.3.1・TypeScript 7.0.2・Vite 8.3.8 で、テスト・静的チェック・ビルド・ブラウザ表示が動くことを確かめた。先生は 7。部品の使い方が、講義と違うことがある）。あわせて `@emotion/react`・`@emotion/styled`（Material UI が使う部品） |
 | 画面のテスト | Vitest 5.0.4 | |
 | Node.js | 24 LTS（24.22.1） | |
 | 画面側の静的チェック・整形 | oxlint・Prettier 3.9.10 | |
@@ -40,7 +40,7 @@
 
 | 項目 | 先生 | 私たち | 決めた方針 |
 |---|---|---|---|
-| UI の部品 | Material UI 7 | Material UI（版は環境構築で確定） | **先生にそろえる**。Tailwind CSS は、使わない（Material UI と役割が重なり、設定の衝突が起きやすいため） |
+| UI の部品 | Material UI 7 | Material UI 9.5.0（2026-11-15 に確定。最新） | **先生にそろえる**。Tailwind CSS は、使わない（Material UI と役割が重なり、設定の衝突が起きやすいため） |
 | React | 19.2.x | 19.3.1 | TaskManagement のまま |
 | TypeScript | 5.9.x | 7.0.2 | TaskManagement のまま |
 | Vite | 7.3.x | 8.3.4 | TaskManagement のまま |
@@ -52,5 +52,6 @@
 | 配置 | AWS（EC2・RDS・ALB・S3）、Terraform、Nginx、systemd | 同じ種類 | 同じ |
 
 - **版を新しいまま使う理由**：1本目・2本目で、動かした実績がある。ただし、講義の画面と、細かい所で違いが出ることがある（エラーのときは、版の違いを疑う。メンターには、使っている版を伝える）
-- **Material UI の版**：Material UI は、React・TypeScript の版と、組み合わせの相性がある。環境構築のとき、動くことを確かめて決め、この文書を更新する
+- **Material UI の版**：ユーザーが「他のツールに合わせて、適切なものを選んで」と一任（2026-11-15）。最新の 9.5.0 で、動くことを確かめて決めた。先生の 7 と使い方が違う所（例：レイアウトの部品）が出たら、版の違いを疑う（メンターには、使っている版を伝える）
+- **ツールの実行（2026-11-15 に確認）**：画面のテスト（`npm test`）は、**Git Bash から実行すると、「failed to find the current suite」で失敗することがあった**（PowerShell では成功）。原因は、実行環境の違いと見られるが、突き止めていない。画面のコマンドは、**PowerShell で実行する**
 - Material UI は、1本目の Tailwind CSS の代わり。2本目（BizRequestTracker）で使った Vuetify と、同じ種類（Material Design の部品集）の、React 版
