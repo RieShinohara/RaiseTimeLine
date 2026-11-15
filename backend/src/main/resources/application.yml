@@ -1,0 +1,26 @@
+server:
+  # この PC（127.0.0.1）からだけつなげる。AWS に置くときは、Nginx が窓口になる（localhost:8080 へ渡す）ので、このままでよい
+  address: 127.0.0.1
+spring:
+  application:
+    name: raisetimeline
+  config:
+    # リポジトリ直下の .env から、DBの接続情報を読み込む（backend/ から見て1つ上）
+    import: optional:file:../.env[.properties]
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:raisetimeline}
+    username: ${POSTGRES_USER:raisetimeline}
+    password: ${POSTGRES_PASSWORD}
+  flyway:
+    # テーブルは、Flyway が、db/migration の SQL（V1、V2…）を順に流して作る
+    locations: classpath:db/migration
+mybatis:
+  configuration:
+    # DB の列名（created_at）を、Java の項目名（createdAt）に自動で結びつける
+    map-underscore-to-camel-case: true
+management:
+  endpoints:
+    web:
+      exposure:
+        # 動作確認の /actuator/health だけを公開する。設定の値や部品の一覧が見える窓口は、開けない
+        include: health
