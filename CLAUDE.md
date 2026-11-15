@@ -85,7 +85,7 @@
 
 ### 3.7 GitHub側の設定
 - **設定済み**（2026-11-12。ユーザー承認）：マージしたら、PR のブランチを自動で削除する（`delete_branch_on_merge`）。`main` ブランチの保護（PR が必須、強制 push と削除の禁止、管理者にも適用、承認は 0 人）
-- **設定済み**（2026-11-15。ユーザー承認）：CI の必須チェック `backend（gradlew check）`（PR が緑でないと、マージできない）。**画面（frontend）と Terraform のジョブができたら、ユーザーの承認をもらって、必須チェックに足す**
+- **設定済み**（2026-11-15。ユーザー承認）：CI の必須チェック `backend（gradlew check）` と `frontend（lint・test・build）`（PR が緑でないと、マージできない。frontend は、2026-11-15 に足した）。**Terraform のジョブができたら、ユーザーの承認をもらって、必須チェックに足す**
 - 必須チェックだけを外したいときは、保護の設定を読んで、`required_status_checks` を除いて、`gh api -X PUT repos/RieShinohara/RaiseTimeLine/branches/main/protection` で入れ直す（読み方は下）
 - 保護の戻し方：`gh api -X DELETE repos/RieShinohara/RaiseTimeLine/branches/main/protection`
 - **保護の設定を変えるときは、変更内容と戻し方を説明して、ユーザーの承認を得てから行う。** 設定の内容は、`gh api repos/RieShinohara/RaiseTimeLine/branches/main/protection` で読める
