@@ -1,27 +1,21 @@
-﻿import AppBar from '@mui/material/AppBar'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
-import Container from '@mui/material/Container'
-import Toolbar from '@mui/material/Toolbar'
-import Typography from '@mui/material/Typography'
+﻿import Container from '@mui/material/Container'
+import { Route, Routes } from 'react-router-dom'
+import Header from './components/Header'
+import HomePage from './pages/HomePage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 
-// 仮の最初の画面（環境構築の確認用）。タイムラインなどの本物の画面は、機能ごとに作る
+// 画面の枠（ヘッダー）と、URL ごとの画面。ログイン状態は、main.tsx の AuthProvider が持つ
 export default function App() {
   return (
     <>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="h1">
-            RaiseTimeLine
-          </Typography>
-        </Toolbar>
-      </AppBar>
+      <Header />
       <Container maxWidth="sm" sx={{ py: 3 }}>
-        <Card>
-          <CardContent>
-            <Typography variant="body1">画面の土台ができました。これから、機能ごとに画面を作ります。</Typography>
-          </CardContent>
-        </Card>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Routes>
       </Container>
     </>
   )
