@@ -28,9 +28,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	// DB の操作は MyBatis（JPA は使わない）。版は、Spring Boot 4.1.1 で動くことを確かめて決めた
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.1.0'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	// JWT（アクセストークン）の発行と検証
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 	runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
 	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:4.1.0'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
@@ -41,6 +47,8 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	// テスト専用の、ダミーの署名の鍵（本物ではない。本物は .env に書く）
+	environment 'JWT_SECRET', 'test-only-secret-test-only-secret-test-only-secret-0123'
 	finalizedBy 'jacocoTestReport'
 }
 

@@ -23,6 +23,8 @@ terraform.rc
 # データベースの中身・書き出し
 *.sql
 *.dump
+# ただし、Flyway の移行ファイル（テーブルの作り方。データは入らない）はコミットする
+!backend/src/main/resources/db/migration/*.sql
 
 # ユーザーがアップロードした画像（個人の写真が入るので、リポジトリに入れない）
 uploads/
