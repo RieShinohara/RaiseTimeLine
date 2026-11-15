@@ -18,6 +18,16 @@ mybatis:
   configuration:
     # DB の列名（created_at）を、Java の項目名（createdAt）に自動で結びつける
     map-underscore-to-camel-case: true
+app:
+  jwt:
+    # 署名の鍵。.env の JWT_SECRET から読む（リポジトリには入れない）。32 文字以上
+    secret: ${JWT_SECRET}
+    # アクセストークンは 15 分、リフレッシュトークンは 7 日
+    access-expiration-ms: 900000
+    refresh-expiration-days: 7
+  cors:
+    # 画面の URL だけを許可する
+    allowed-origin: http://localhost:5173
 management:
   endpoints:
     web:
