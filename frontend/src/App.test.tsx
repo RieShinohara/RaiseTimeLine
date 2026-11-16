@@ -157,6 +157,6 @@ test('すでにログイン中に、ログイン画面を開くと、トップ�
   saveSession({ accessToken: 'access-1', refreshToken: 'refresh-1', user: DEMO_USER })
   fetchMock.mockResolvedValue(jsonResponse(200, EMPTY_PAGE))
   renderApp('/login')
-  expect(await screen.findByRole('button', { name: '＋ 投稿する' })).toBeInTheDocument()
+  expect(await screen.findByRole('button', { name: '投稿する' })).toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: 'ログイン' })).not.toBeInTheDocument()
 })
