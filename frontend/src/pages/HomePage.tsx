@@ -3,6 +3,7 @@ import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
+import Fab from '@mui/material/Fab'
 import Stack from '@mui/material/Stack'
 import Tab from '@mui/material/Tab'
 import Tabs from '@mui/material/Tabs'
@@ -35,18 +36,25 @@ export default function HomePage() {
   }
 
   return (
-    <Box>
+    // 下の余白（pb）は、右下の浮かぶボタンに、最後のカードが隠れないようにするため
+    <Box sx={{ pb: 10 }}>
       <NewPostsBanner count={newCount} onClick={() => void showNewPosts()} />
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Tabs value={0} sx={{ flexGrow: 1 }}>
-          <Tab label="全体" />
-        </Tabs>
-        {user && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setComposing(true)}>
-            投稿する
-          </Button>
-        )}
-      </Box>
+      <Tabs value={0} sx={{ mb: 2 }}>
+        <Tab label="全体" />
+      </Tabs>
+      {/* 画面の右下に固定。下へ読み進めても、いつでも押せる（ログイン中だけ）。
+          画面が広いときは、一覧の右端の内側に寄せる（一覧の幅は 600px。左右の余白は 24px） */}
+      {user && (
+        <Fab
+          variant="extended"
+          color="primary"
+          onClick={() => setComposing(true)}
+          sx={{ position: 'fixed', bottom: 24, right: 'max(16px, calc(50% - 276px))' }}
+        >
+          <AddIcon sx={{ mr: 1 }} />
+          投稿する
+        </Fab>
+      )}
 
       <Stack spacing={2}>
         {posts.map((post) => {
