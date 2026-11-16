@@ -1,16 +1,9 @@
 import type { AuthUser } from '../auth/tokenStorage'
+import { ApiError, NETWORK_ERROR_MESSAGE, readMessage } from './errors'
 
 // 認証 API（/api/auth/...）を呼ぶ関数。ここは「札なし」で呼ぶ（札の自動更新は、http.ts の役目）
 
-export class ApiError extends Error {
-  readonly status: number
-
-  constructor(status: number, message: string) {
-    super(message)
-    this.name = 'ApiError'
-    this.status = status
-  }
-}
+export { ApiError }
 
 export interface RegisterRequest {
   email: string
@@ -25,17 +18,6 @@ export interface LoginResponse {
   user: AuthUser
 }
 
-// サーバーが返す {"message": "..."} を、取り出す。読めなければ、決まった文言にする
-async function readMessage(res: Response): Promise<string> {
-  try {
-    const body = (await res.json()) as { message?: string }
-    if (body.message) return body.message
-  } catch {
-    // JSON でないときは、下の文言にする
-  }
-  return 'エラーが起きました。もう一度、試してください'
-}
-
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   let res: Response
   try {
@@ -45,7 +27,7 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
       body: JSON.stringify(body),
     })
   } catch {
-    throw new ApiError(0, 'サーバーにつながりません。しばらくしてから、もう一度、試してください')
+    throw new ApiError(0, NETWORK_ERROR_MESSAGE)
   }
   if (!res.ok) throw new ApiError(res.status, await readMessage(res))
   if (res.status === 204) return undefined as T

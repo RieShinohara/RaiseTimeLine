@@ -7,6 +7,8 @@ import { jsonResponse, renderApp } from './test-utils/render'
 // サンプルは、すべて架空（実在の人・アドレスではない）
 const DEMO_USER = { id: 1, email: 'demo@example.com', username: 'demo_user', displayName: 'デモ' }
 
+const EMPTY_PAGE = { posts: [], page: 0, size: 20, hasNext: false }
+
 const fetchMock = vi.fn()
 
 beforeEach(() => {
@@ -36,11 +38,13 @@ async function fillRegisterForm(user: ReturnType<typeof userEvent.setup>, overri
 }
 
 test('土台：アプリ名が表示される', () => {
+  fetchMock.mockResolvedValue(jsonResponse(200, EMPTY_PAGE))
   renderApp('/')
   expect(screen.getByRole('heading', { name: 'RaiseTimeLine' })).toBeInTheDocument()
 })
 
 test('未ログインのヘッダーには、ログインとユーザー登録がある', () => {
+  fetchMock.mockResolvedValue(jsonResponse(200, EMPTY_PAGE))
   renderApp('/')
   expect(screen.getByRole('link', { name: 'ログイン' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'ユーザー登録' })).toBeInTheDocument()
@@ -132,7 +136,10 @@ test('サーバーにつながらないときは、つながらない旨を表�
 test('ログアウトすると、サーバーで札を無効にして、札を捨てて、ログイン画面へ戻る', async () => {
   const user = userEvent.setup()
   saveSession({ accessToken: 'access-1', refreshToken: 'refresh-1', user: DEMO_USER })
-  fetchMock.mockResolvedValueOnce(jsonResponse(204))
+  // トップ画面は、開くとタイムラインを読む。URL ごとに、返事を分ける
+  fetchMock.mockImplementation((url: string) =>
+    Promise.resolve(url.startsWith('/api/posts') ? jsonResponse(200, EMPTY_PAGE) : jsonResponse(204)),
+  )
   renderApp('/')
   expect(screen.getByText('デモ（@demo_user）')).toBeInTheDocument()
 
@@ -141,13 +148,15 @@ test('ログアウトすると、サーバーで札を無効にして、札を�
   await waitFor(() => expect(screen.getByRole('heading', { name: 'ログイン' })).toBeInTheDocument())
   expect(getAccessToken()).toBeNull()
   expect(getRefreshToken()).toBeNull()
-  const [url, init] = fetchMock.mock.calls[0]
-  expect(url).toBe('/api/auth/logout')
-  expect(JSON.parse(init.body)).toEqual({ refreshToken: 'refresh-1' })
+  const logoutCall = fetchMock.mock.calls.find(([url]) => url === '/api/auth/logout')
+  expect(logoutCall).toBeDefined()
+  expect(JSON.parse(logoutCall![1].body)).toEqual({ refreshToken: 'refresh-1' })
 })
 
-test('すでにログイン中に、ログイン画面を開くと、トップへ移る', () => {
+test('すでにログイン中に、ログイン画面を開くと、トップ（タイムライン）へ移る', async () => {
   saveSession({ accessToken: 'access-1', refreshToken: 'refresh-1', user: DEMO_USER })
+  fetchMock.mockResolvedValue(jsonResponse(200, EMPTY_PAGE))
   renderApp('/login')
-  expect(screen.getByText(/ようこそ、デモさん/)).toBeInTheDocument()
+  expect(await screen.findByRole('button', { name: '＋ 投稿する' })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'ログイン' })).not.toBeInTheDocument()
 })
