@@ -87,7 +87,7 @@ test('タイムラインは、ログインなしで見られる（札は付け�
   expect(within(articles[1]).getByText('編集済み')).toBeInTheDocument()
   expect(screen.getByText('これ以上ありません')).toBeInTheDocument()
   // ログインしていないので、投稿のボタンは出ない
-  expect(screen.queryByRole('button', { name: '＋ 投稿する' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '投稿する' })).not.toBeInTheDocument()
 })
 
 test('本文の HTML は、文字として表示する（XSS の対策）', async () => {
@@ -146,7 +146,7 @@ test('ログイン中は「＋ 投稿する」が出て、投稿のモーダル�
   fetchMock.mockResolvedValueOnce(jsonResponse(200, page([])))
   renderApp('/')
 
-  await user.click(await screen.findByRole('button', { name: '＋ 投稿する' }))
+  await user.click(await screen.findByRole('button', { name: '投稿する' }))
   const dialog = await screen.findByRole('dialog')
   const submit = within(dialog).getByRole('button', { name: '投稿' })
   expect(submit).toBeDisabled() // 空では、投稿できない
@@ -178,7 +178,7 @@ test('投稿すると、札を付けて送り、モーダルが閉じて、一�
   renderApp('/')
   expect(await screen.findByText('前からある投稿')).toBeInTheDocument()
 
-  await user.click(screen.getByRole('button', { name: '＋ 投稿する' }))
+  await user.click(screen.getByRole('button', { name: '投稿する' }))
   const dialog = await screen.findByRole('dialog')
   await user.type(within(dialog).getByRole('textbox'), '今、投稿した')
   await user.click(within(dialog).getByRole('button', { name: '投稿' }))
@@ -202,7 +202,7 @@ test('投稿に失敗したら、モーダルを閉じず、入力した内容�
   fetchMock.mockResolvedValueOnce(jsonResponse(400, { message: '本文は 280 文字までです' }))
   renderApp('/')
 
-  await user.click(await screen.findByRole('button', { name: '＋ 投稿する' }))
+  await user.click(await screen.findByRole('button', { name: '投稿する' }))
   const dialog = await screen.findByRole('dialog')
   await user.type(within(dialog).getByRole('textbox'), '消えてほしくない文章')
   await user.click(within(dialog).getByRole('button', { name: '投稿' }))
@@ -219,11 +219,138 @@ test('キャンセルすると、入力を捨てて閉じる', async () => {
   fetchMock.mockResolvedValueOnce(jsonResponse(200, page([])))
   renderApp('/')
 
-  await user.click(await screen.findByRole('button', { name: '＋ 投稿する' }))
+  await user.click(await screen.findByRole('button', { name: '投稿する' }))
   await user.type(within(await screen.findByRole('dialog')).getByRole('textbox'), '途中でやめる')
   await user.click(screen.getByRole('button', { name: 'キャンセル' }))
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
-  await user.click(screen.getByRole('button', { name: '＋ 投稿する' }))
+  await user.click(screen.getByRole('button', { name: '投稿する' }))
   expect(within(await screen.findByRole('dialog')).getByRole('textbox')).toHaveValue('')
+})
+
+// ここから：編集・削除（⑤-3a）。DEMO_USER（id 1）が書いた投稿と、他の人（id 2）の投稿
+function mine(id: number, body: string, extra: Partial<Post> = {}): Post {
+  return post(id, body, { author: { id: 1, username: 'demo_user', displayName: 'デモ' }, ...extra })
+}
+
+function loginAndLoad(posts: Post[]) {
+  saveSession({ accessToken: 'access-1', refreshToken: 'refresh-1', user: DEMO_USER })
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, page(posts)))
+  renderApp('/')
+}
+
+test('編集・削除のボタンは、自分の投稿だけに出る（ログインなしでは、出ない）', async () => {
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, page([mine(2, '自分の投稿'), post(1, '他の人の投稿')])))
+  renderApp('/')
+  expect(await screen.findByText('自分の投稿')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '編集' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '削除' })).not.toBeInTheDocument()
+})
+
+test('ログイン中は、自分の投稿にだけ、編集と削除のボタンが出る', async () => {
+  loginAndLoad([mine(2, '自分の投稿'), post(1, '他の人の投稿')])
+  expect(await screen.findByText('他の人の投稿')).toBeInTheDocument()
+  const articles = screen.getAllByRole('article')
+  expect(within(articles[0]).getByRole('button', { name: '編集' })).toBeInTheDocument()
+  expect(within(articles[0]).getByRole('button', { name: '削除' })).toBeInTheDocument()
+  expect(within(articles[1]).queryByRole('button', { name: '編集' })).not.toBeInTheDocument()
+  expect(within(articles[1]).queryByRole('button', { name: '削除' })).not.toBeInTheDocument()
+})
+
+test('編集：今の本文が入ったモーダルで直して保存すると、同じ場所で置き換わり「編集済み」になる', async () => {
+  const user = userEvent.setup()
+  loginAndLoad([mine(2, '直す前の本文'), post(1, '他の人の投稿')])
+  await screen.findByText('直す前の本文')
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, mine(2, '直したあとの本文', { updatedAt: '2026-11-16T07:00:00Z' })))
+
+  await user.click(within(screen.getAllByRole('article')[0]).getByRole('button', { name: '編集' }))
+  const dialog = await screen.findByRole('dialog')
+  const input = within(dialog).getByRole('textbox')
+  expect(input).toHaveValue('直す前の本文')
+  const save = within(dialog).getByRole('button', { name: '保存' })
+  expect(save).toBeDisabled() // 本文が同じままでは、保存できない
+
+  await user.clear(input)
+  await user.type(input, '直したあとの本文')
+  await user.click(save)
+
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  const articles = screen.getAllByRole('article')
+  expect(within(articles[0]).getByText('直したあとの本文')).toBeInTheDocument()
+  expect(within(articles[0]).getByText('編集済み')).toBeInTheDocument()
+  expect(within(articles[1]).getByText('他の人の投稿')).toBeInTheDocument()
+  expect(screen.queryByText('直す前の本文')).not.toBeInTheDocument()
+
+  const [url, init] = fetchMock.mock.calls[1]
+  expect(url).toBe('/api/posts/2')
+  expect(init.method).toBe('PUT')
+  expect(JSON.parse(init.body)).toEqual({ body: '直したあとの本文' })
+  expect(new Headers(init.headers).get('Authorization')).toBe('Bearer access-1')
+})
+
+test('編集に失敗したら、モーダルを閉じず、入力を残して理由を出す。元の投稿は変わらない', async () => {
+  const user = userEvent.setup()
+  loginAndLoad([mine(2, '元の本文')])
+  await screen.findByText('元の本文')
+  fetchMock.mockResolvedValueOnce(jsonResponse(404, { message: '投稿が見つかりません' }))
+
+  await user.click(screen.getByRole('button', { name: '編集' }))
+  const dialog = await screen.findByRole('dialog')
+  await user.type(within(dialog).getByRole('textbox'), 'つづき')
+  await user.click(within(dialog).getByRole('button', { name: '保存' }))
+
+  expect(await within(dialog).findByText('投稿が見つかりません')).toBeInTheDocument()
+  expect(within(dialog).getByRole('textbox')).toHaveValue('元の本文つづき')
+  // モーダルが開いている間、背後の画面は、支援技術から隠される（aria-hidden）ので、hidden も探す
+  expect(screen.getByRole('article', { hidden: true })).toHaveTextContent('元の本文')
+})
+
+test('削除：確認のダイアログで「キャンセル」なら、何も消さない', async () => {
+  const user = userEvent.setup()
+  loginAndLoad([mine(2, '消さない投稿')])
+  await screen.findByText('消さない投稿')
+
+  await user.click(screen.getByRole('button', { name: '削除' }))
+  const dialog = await screen.findByRole('dialog')
+  expect(within(dialog).getByText('この投稿を削除しますか？')).toBeInTheDocument()
+  expect(within(dialog).getByText('削除した投稿は元に戻せません。')).toBeInTheDocument()
+  await user.click(within(dialog).getByRole('button', { name: 'キャンセル' }))
+
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  expect(screen.getByText('消さない投稿')).toBeInTheDocument()
+  expect(fetchMock).toHaveBeenCalledTimes(1) // 一覧を読んだだけ。DELETE は送っていない
+})
+
+test('削除：「削除する」を押すと、サーバーに送り、一覧から消える', async () => {
+  const user = userEvent.setup()
+  loginAndLoad([mine(2, '消す投稿'), post(1, '残る投稿')])
+  await screen.findByText('消す投稿')
+  fetchMock.mockResolvedValueOnce(jsonResponse(204))
+
+  await user.click(within(screen.getAllByRole('article')[0]).getByRole('button', { name: '削除' }))
+  await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: '削除する' }))
+
+  await waitFor(() => expect(screen.queryByText('消す投稿')).not.toBeInTheDocument())
+  // ダイアログは、閉じる動き（アニメーション）のあとで消える
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  expect(screen.getByText('残る投稿')).toBeInTheDocument()
+  const [url, init] = fetchMock.mock.calls[1]
+  expect(url).toBe('/api/posts/2')
+  expect(init.method).toBe('DELETE')
+  expect(new Headers(init.headers).get('Authorization')).toBe('Bearer access-1')
+})
+
+test('削除に失敗したら、ダイアログを閉じず、理由を出す。投稿は残る', async () => {
+  const user = userEvent.setup()
+  loginAndLoad([mine(2, '消えない投稿')])
+  await screen.findByText('消えない投稿')
+  fetchMock.mockResolvedValueOnce(jsonResponse(403, { message: '他の人の投稿は、編集・削除できません' }))
+
+  await user.click(screen.getByRole('button', { name: '削除' }))
+  const dialog = await screen.findByRole('dialog')
+  await user.click(within(dialog).getByRole('button', { name: '削除する' }))
+
+  expect(await within(dialog).findByText('他の人の投稿は、編集・削除できません')).toBeInTheDocument()
+  expect(screen.getByRole('dialog')).toBeInTheDocument()
+  expect(screen.getByText('消えない投稿')).toBeInTheDocument()
 })

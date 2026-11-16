@@ -20,6 +20,7 @@
 | 画面 | React 19.3.1 ＋ TypeScript 7.0.2 | |
 | 画面のビルド | Vite 8.3.4 | |
 | UI の部品・見た目 | **Material UI**（`@mui/material`） | TaskManagement の Tailwind CSS からの変更。**版は 9.5.0 に確定**（2026-11-15。最新。React 19.3.1・TypeScript 7.0.2・Vite 8.3.8 で、テスト・静的チェック・ビルド・ブラウザ表示が動くことを確かめた。先生は 7。部品の使い方が、講義と違うことがある）。あわせて `@emotion/react`・`@emotion/styled`（Material UI が使う部品） |
+| アイコン | **`@mui/icons-material`** | **9.5.0 に確定**（2026-11-16。ユーザーが「入れてください」と決定。講義 28 の画面で、編集・削除のアイコンが要る。⑥のハート・コメントでも使う）。`@mui/material` と同じ 9.5.0（peerDependencies は `@mui/material ^9.5.0`）。**使うアイコンだけを、1 つずつ import する**（例：`@mui/icons-material/EditOutlined`。約 4 万個あるので、まとめて import しない）。線の細い版の名前は `〇〇Outlined`（`DeleteOutlined`。`DeleteOutline` ではない） |
 | 画面のテスト | Vitest 5.0.4 | |
 | Node.js | 24 LTS（24.22.1） | |
 | 画面側の静的チェック・整形 | oxlint・Prettier 3.9.10 | |
