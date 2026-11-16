@@ -20,8 +20,9 @@ export function validateRegister(values: RegisterValues): RegisterErrors {
   else if (values.email.trim().length > 255) errors.email = 'メールアドレスは 255 文字までです'
 
   if (!values.password) errors.password = 'パスワードを入力してください'
-  else if (!/^(?=.*[A-Za-z])(?=.*\d).{8,72}$/.test(values.password))
-    errors.password = 'パスワードは 8〜72 文字で、英字と数字を 1 文字以上ずつ含めてください'
+  else if (!/^(?=.*[A-Za-z])(?=.*\d)[\x21-\x7E]{8,72}$/.test(values.password))
+    errors.password =
+      'パスワードは、半角の英数字と記号で、8〜72 文字にしてください。英字と数字を 1 文字以上ずつ含めます'
 
   if (values.passwordConfirm !== values.password) errors.passwordConfirm = 'パスワードが、一致しません'
 

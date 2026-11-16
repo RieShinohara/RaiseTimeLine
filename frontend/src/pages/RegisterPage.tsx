@@ -73,7 +73,13 @@ export default function RegisterPage() {
         )}
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'grid', gap: 2 }}>
           {field('email', 'メールアドレス', 'email', 'email')}
-          {field('password', 'パスワード', 'password', 'new-password', '8 文字以上で、英字と数字を含めます')}
+          {field(
+            'password',
+            'パスワード',
+            'password',
+            'new-password',
+            '半角の英数字と記号で、8〜72 文字。英字と数字を含めます',
+          )}
           {field('passwordConfirm', 'パスワード（確認）', 'password', 'new-password')}
           {field('username', 'ユーザー名', 'text', 'username', '英数字と _ だけ、2〜30 文字。登録後は変えられません')}
           {field('displayName', '表示名', 'text', 'nickname', '50 文字まで。あとから変えられます')}
