@@ -101,6 +101,11 @@ class AuthApiTests {
 				registerJson("e_" + s + "@example.com", "short1", "u_" + s, "名前"),
 				registerJson("e_" + s + "@example.com", "onlyletters", "u_" + s, "名前"),
 				registerJson("e_" + s + "@example.com", "12345678", "u_" + s, "名前"),
+				// 日本語・全角・スペース・73 文字は不可（B1。日本語は 72 バイトを超えて、500 になっていた）
+				registerJson("e_" + s + "@example.com", "a1" + "あ".repeat(30), "u_" + s, "名前"),
+				registerJson("e_" + s + "@example.com", "ＡＢＣ12345", "u_" + s, "名前"),
+				registerJson("e_" + s + "@example.com", "pass word1", "u_" + s, "名前"),
+				registerJson("e_" + s + "@example.com", "a1" + "b".repeat(71), "u_" + s, "名前"),
 				registerJson("e_" + s + "@example.com", PASSWORD, "a", "名前"),
 				registerJson("e_" + s + "@example.com", PASSWORD, "bad-name!", "名前"),
 				registerJson("e_" + s + "@example.com", PASSWORD, "u_" + s, ""),
@@ -161,6 +166,23 @@ class AuthApiTests {
 				.content("{\"email\":\"nobody_" + s + "@example.com\",\"password\":\"" + PASSWORD + "\"}"))
 				.andExpect(status().isUnauthorized())
 				.andExpect(jsonPath("$.message").value(message));
+	}
+
+	@Test
+	void パスワードは半角72文字ちょうどまで登録でき長すぎる入力のログインは500でなく401() throws Exception {
+		String s = suffix();
+		String email = "len_" + s + "@example.com";
+		String max = "a1" + "b".repeat(70);
+		mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+				.content(registerJson(email, max, "len_" + s, "名前")))
+				.andExpect(status().isCreated());
+		mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"email\":\"" + email + "\",\"password\":\"" + max + "\"}"))
+				.andExpect(status().isOk());
+		String tooLong = "a1" + "あ".repeat(30);
+		mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"email\":\"" + email + "\",\"password\":\"" + tooLong + "\"}"))
+				.andExpect(status().isUnauthorized());
 	}
 
 	@Test

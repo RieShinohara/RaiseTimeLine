@@ -18,8 +18,8 @@ public final class AuthDtos {
 			String email,
 
 			@NotBlank(message = "パスワードを入力してください")
-			@Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).{8,72}$",
-					message = "パスワードは 8〜72 文字で、英字と数字を 1 文字以上ずつ含めてください")
+			@Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[\\x21-\\x7E]{8,72}$",
+					message = "パスワードは、半角の英数字と記号で、8〜72 文字にしてください。英字と数字を 1 文字以上ずつ含めます")
 			String password,
 
 			@NotBlank(message = "ユーザー名を入力してください")
