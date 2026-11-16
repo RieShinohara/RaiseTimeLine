@@ -6,6 +6,10 @@ export const theme = createTheme({
     primary: { main: '#1976d2' },
     background: { default: '#f5f7fa' },
   },
+  components: {
+    // ボタンの角の丸み。標準は 4px。ユーザーが、20px（ほぼ丸型）を選んだ（2026-11-16。Issue #76）
+    MuiButton: { styleOverrides: { root: { borderRadius: 20 } } },
+  },
   typography: {
     fontFamily: ['"Roboto"', '"Noto Sans JP"', '"Hiragino Kaku Gothic ProN"', '"Yu Gothic"', 'sans-serif'].join(','),
   },
