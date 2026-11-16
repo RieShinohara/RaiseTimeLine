@@ -1,7 +1,6 @@
 package com.example.raisetimeline.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -212,8 +211,11 @@ class AuthApiTests {
 
 	@Test
 	void ログインが必要なAPIは札がないと401() throws Exception {
-		mockMvc.perform(get("/api/posts")).andExpect(status().isUnauthorized());
-		mockMvc.perform(get("/api/posts").header("Authorization", "Bearer でたらめ"))
+		// 投稿の作成は、ログインが要る（タイムラインの閲覧は、ログインなしで見られる。TL-3）
+		mockMvc.perform(post("/api/posts").contentType(MediaType.APPLICATION_JSON).content("{\"body\":\"x\"}"))
+				.andExpect(status().isUnauthorized());
+		mockMvc.perform(post("/api/posts").header("Authorization", "Bearer でたらめ")
+				.contentType(MediaType.APPLICATION_JSON).content("{\"body\":\"x\"}"))
 				.andExpect(status().isUnauthorized());
 	}
 
