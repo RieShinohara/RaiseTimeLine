@@ -1,5 +1,6 @@
 package com.example.raisetimeline.auth;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
@@ -21,6 +22,7 @@ import com.example.raisetimeline.auth.AuthDtos.UserResponse;
 public class AuthService {
 
 	private static final String LOGIN_FAILED = "メールアドレスかパスワードが違います";
+	private static final int MAX_PASSWORD_BYTES = 72;
 	private static final String TOKEN_INVALID = "ログインの期限が切れました。もう一度ログインしてください";
 
 	private final UserMapper userMapper;
@@ -63,8 +65,10 @@ public class AuthService {
 
 	public LoginResponse login(LoginRequest request) {
 		User user = userMapper.findByEmail(normalizeEmail(request.email()));
+		// 72 バイトを超える入力は、BCrypt が例外を出す（500 になる）ので、照合せずに「違う」とする。登録できるパスワードは、72 バイト以内
+		boolean tooLong = request.password().getBytes(StandardCharsets.UTF_8).length > MAX_PASSWORD_BYTES;
 		// メールが無い場合も、パスワードが違う場合も、同じ文言にする（どちらが違うかを教えない）
-		if (user == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+		if (user == null || tooLong || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
 			throw new ApiException(HttpStatus.UNAUTHORIZED, LOGIN_FAILED);
 		}
 		RefreshToken refreshToken = new RefreshToken();
