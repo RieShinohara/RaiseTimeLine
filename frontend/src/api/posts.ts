@@ -1,5 +1,5 @@
 import { ApiError, NETWORK_ERROR_MESSAGE, readMessage } from './errors'
-import { apiFetch } from './http'
+import { apiFetch, refreshIfExpired } from './http'
 
 // 投稿 API（/api/posts）を呼ぶ関数（docs/features/02-post.md、04-timeline.md の API）
 
@@ -37,6 +37,21 @@ export async function fetchPosts(page: number, size: number = PAGE_SIZE): Promis
   }
   if (!res.ok) throw new ApiError(res.status, await readMessage(res))
   return (await res.json()) as PostPage
+}
+
+// since より新しい投稿の件数（新着の確認用）。ログイン中は、自分の投稿を数えない（サーバーが判断）。
+// since は、サーバーが返した日時の文字列を、変換せずに渡す（変換すると、細かい桁が落ちて、一番上の投稿自身が数えられることがある）
+export async function fetchNewCount(since: string): Promise<number> {
+  // 札の期限が切れていると、サーバーは「ログインなし」として数える。先に更新しておく
+  await refreshIfExpired()
+  let res: Response
+  try {
+    res = await apiFetch(`/api/posts/new-count?since=${encodeURIComponent(since)}`)
+  } catch {
+    throw new ApiError(0, NETWORK_ERROR_MESSAGE)
+  }
+  if (!res.ok) throw new ApiError(res.status, await readMessage(res))
+  return ((await res.json()) as { count: number }).count
 }
 
 // ログインが要る呼び出し。札を付けて送る（期限切れなら、http.ts が自動で更新する）。

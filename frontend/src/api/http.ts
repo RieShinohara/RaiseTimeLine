@@ -1,3 +1,4 @@
+import { isTokenExpired } from '../auth/jwt'
 import { clearSession, getAccessToken, getRefreshToken, saveAccessToken } from '../auth/tokenStorage'
 import { ApiError, refresh } from './auth'
 
@@ -31,6 +32,28 @@ async function tryRefresh(): Promise<RefreshResult> {
   }
 }
 
+// 更新を、1 回だけ行う（同時に呼ばれても、同じ更新を待つ）。結果に応じて、ログイン切れも知らせる
+async function runRefresh(): Promise<RefreshResult> {
+  refreshing ??= tryRefresh().finally(() => {
+    refreshing = null
+  })
+  const result = await refreshing
+  if (result === 'invalid') {
+    clearSession()
+    authLostHandler?.()
+  }
+  return result
+}
+
+// アクセストークンの期限が切れていたら、先に更新する。
+// ログインなしでも使える API（新着の件数など）は、期限切れの札を「札なし」として扱い、401 を返さない。
+// そのまま呼ぶと、「ログイン中の人」として扱われず、自分の投稿も数えられてしまうため
+export async function refreshIfExpired(): Promise<void> {
+  const token = getAccessToken()
+  if (!token || !getRefreshToken() || !isTokenExpired(token)) return
+  await runRefresh()
+}
+
 function send(input: string, init: RequestInit): Promise<Response> {
   const headers = new Headers(init.headers)
   const token = getAccessToken()
@@ -42,14 +65,7 @@ export async function apiFetch(input: string, init: RequestInit = {}): Promise<R
   const res = await send(input, init)
   if (res.status !== 401 || !getRefreshToken()) return res
 
-  refreshing ??= tryRefresh().finally(() => {
-    refreshing = null
-  })
-  const result = await refreshing
+  const result = await runRefresh()
   if (result === 'ok') return send(input, init)
-  if (result === 'invalid') {
-    clearSession()
-    authLostHandler?.()
-  }
   return res
 }
