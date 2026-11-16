@@ -10,24 +10,33 @@ import Typography from '@mui/material/Typography'
 import { useState } from 'react'
 import type { Post } from '../api/posts'
 import DeletePostDialog from '../components/DeletePostDialog'
+import NewPostsBanner from '../components/NewPostsBanner'
 import PostCard from '../components/PostCard'
 import PostComposerDialog from '../components/PostComposerDialog'
 import { useAuth } from '../auth/useAuth'
 import { useInfiniteScroll } from '../timeline/useInfiniteScroll'
+import { useNewPostsCount } from '../timeline/useNewPostsCount'
 import { useTimeline } from '../timeline/useTimeline'
 
 // トップ画面：タイムライン（全体）。ログインなしで見られる。「フォロー中」は、フォローの機能のときに足す
 export default function HomePage() {
   const { user } = useAuth()
-  const { posts, hasNext, loading, error, loadMore, prepend, replace, remove } = useTimeline()
+  const { posts, hasNext, loading, error, syncedAt, loadMore, reload, prepend, replace, remove } = useTimeline()
+  const newCount = useNewPostsCount(syncedAt)
   const [composing, setComposing] = useState(false)
   // 編集中の投稿・削除の確認中の投稿（なければ null）
   const [editing, setEditing] = useState<Post | null>(null)
   const [deleting, setDeleting] = useState<Post | null>(null)
   const sentinelRef = useInfiniteScroll(loadMore, hasNext && !loading && !error)
 
+  // バナーを押したとき：1 ページ目から読み直して、一番上までスクロールする（失敗したら、動かない）
+  async function showNewPosts() {
+    if (await reload()) window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <Box>
+      <NewPostsBanner count={newCount} onClick={() => void showNewPosts()} />
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <Tabs value={0} sx={{ flexGrow: 1 }}>
           <Tab label="全体" />
