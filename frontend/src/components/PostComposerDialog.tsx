@@ -6,7 +6,7 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import TextField from '@mui/material/TextField'
 import { useState, type FormEvent } from 'react'
-import { createPost, type Post } from '../api/posts'
+import { createPost, updatePost, type Post } from '../api/posts'
 
 // サーバーと同じ数え方（Java の文字数＝JavaScript の length。絵文字などは、2 文字分に数える）
 export const MAX_POST_LENGTH = 280
@@ -14,20 +14,25 @@ export const MAX_POST_LENGTH = 280
 interface Props {
   open: boolean
   onClose: () => void
-  onPosted: (post: Post) => void
+  // 投稿・保存に成功したときに、サーバーが返した投稿を渡す
+  onDone: (post: Post) => void
+  // 渡すと、その投稿の本文を直す「編集」になる。渡さなければ、新しい投稿
+  editing?: Post
 }
 
-// 「＋ 投稿する」で開く、投稿のモーダル（POST-5）
-export default function PostComposerDialog({ open, onClose, onPosted }: Props) {
-  const [body, setBody] = useState('')
+// 「＋ 投稿する」「編集」で開く、投稿のモーダル（POST-5。編集も、同じモーダルを使う）
+export default function PostComposerDialog({ open, onClose, onDone, editing }: Props) {
+  const [body, setBody] = useState(editing?.body ?? '')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const tooLong = body.length > MAX_POST_LENGTH
-  const canSubmit = body.trim().length > 0 && !tooLong && !submitting
+  // 編集では、本文が変わっていないときは、保存できない
+  const unchanged = editing !== undefined && body === editing.body
+  const canSubmit = body.trim().length > 0 && !tooLong && !unchanged && !submitting
 
   function close() {
-    setBody('')
+    setBody(editing?.body ?? '')
     setError(null)
     onClose()
   }
@@ -38,8 +43,8 @@ export default function PostComposerDialog({ open, onClose, onPosted }: Props) {
     setSubmitting(true)
     setError(null)
     try {
-      const post = await createPost(body)
-      onPosted(post)
+      const post = editing ? await updatePost(editing.id, body) : await createPost(body)
+      onDone(post)
       close()
     } catch (err) {
       // 失敗したときは、閉じない。入力した内容も、残す
@@ -52,7 +57,7 @@ export default function PostComposerDialog({ open, onClose, onPosted }: Props) {
   return (
     <Dialog open={open} onClose={submitting ? undefined : close} fullWidth maxWidth="sm">
       <form onSubmit={handleSubmit} noValidate>
-        <DialogTitle>投稿する</DialogTitle>
+        <DialogTitle>{editing ? '投稿を編集' : '投稿する'}</DialogTitle>
         <DialogContent>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -60,7 +65,7 @@ export default function PostComposerDialog({ open, onClose, onPosted }: Props) {
             </Alert>
           )}
           <TextField
-            label="いまどうしてる？"
+            label={editing ? '本文' : 'いまどうしてる？'}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             multiline
@@ -77,7 +82,7 @@ export default function PostComposerDialog({ open, onClose, onPosted }: Props) {
             キャンセル
           </Button>
           <Button type="submit" variant="contained" disabled={!canSubmit}>
-            投稿
+            {editing ? '保存' : '投稿'}
           </Button>
         </DialogActions>
       </form>

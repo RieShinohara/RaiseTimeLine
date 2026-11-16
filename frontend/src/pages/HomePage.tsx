@@ -1,3 +1,4 @@
+import AddIcon from '@mui/icons-material/Add'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -7,6 +8,8 @@ import Tab from '@mui/material/Tab'
 import Tabs from '@mui/material/Tabs'
 import Typography from '@mui/material/Typography'
 import { useState } from 'react'
+import type { Post } from '../api/posts'
+import DeletePostDialog from '../components/DeletePostDialog'
 import PostCard from '../components/PostCard'
 import PostComposerDialog from '../components/PostComposerDialog'
 import { useAuth } from '../auth/useAuth'
@@ -16,8 +19,11 @@ import { useTimeline } from '../timeline/useTimeline'
 // トップ画面：タイムライン（全体）。ログインなしで見られる。「フォロー中」は、フォローの機能のときに足す
 export default function HomePage() {
   const { user } = useAuth()
-  const { posts, hasNext, loading, error, loadMore, prepend } = useTimeline()
+  const { posts, hasNext, loading, error, loadMore, prepend, replace, remove } = useTimeline()
   const [composing, setComposing] = useState(false)
+  // 編集中の投稿・削除の確認中の投稿（なければ null）
+  const [editing, setEditing] = useState<Post | null>(null)
+  const [deleting, setDeleting] = useState<Post | null>(null)
   const sentinelRef = useInfiniteScroll(loadMore, hasNext && !loading && !error)
 
   return (
@@ -27,17 +33,25 @@ export default function HomePage() {
           <Tab label="全体" />
         </Tabs>
         {user && (
-          // アイコン集（@mui/icons-material）は、まだ入れていないので、「＋」は文字で表す
-          <Button variant="contained" onClick={() => setComposing(true)}>
-            ＋ 投稿する
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setComposing(true)}>
+            投稿する
           </Button>
         )}
       </Box>
 
       <Stack spacing={2}>
-        {posts.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
+        {posts.map((post) => {
+          // 編集・削除は、自分の投稿だけ（他の人の分は、サーバーも断る）
+          const mine = user !== null && user.id === post.author.id
+          return (
+            <PostCard
+              key={post.id}
+              post={post}
+              onEdit={mine ? setEditing : undefined}
+              onDelete={mine ? setDeleting : undefined}
+            />
+          )
+        })}
       </Stack>
 
       {error && (
@@ -71,7 +85,12 @@ export default function HomePage() {
       {/* この目印が見えたら、続きを読む */}
       <div ref={sentinelRef} />
 
-      {user && <PostComposerDialog open={composing} onClose={() => setComposing(false)} onPosted={prepend} />}
+      {user && <PostComposerDialog open={composing} onClose={() => setComposing(false)} onDone={prepend} />}
+      {/* 編集は、投稿ごとに開き直す（key で、前の入力が残らないようにする） */}
+      {editing && (
+        <PostComposerDialog key={editing.id} open editing={editing} onClose={() => setEditing(null)} onDone={replace} />
+      )}
+      <DeletePostDialog post={deleting} onClose={() => setDeleting(null)} onDeleted={(post) => remove(post.id)} />
     </Box>
   )
 }

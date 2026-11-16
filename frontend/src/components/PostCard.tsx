@@ -1,13 +1,23 @@
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
+import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import type { Post } from '../api/posts'
 import { formatDateTime } from '../timeline/format'
 
-// 投稿 1 件のカード。いいね数・コメント数・編集・削除は、あとの機能で足す
-export default function PostCard({ post }: { post: Post }) {
+interface Props {
+  post: Post
+  // 自分の投稿のときだけ、編集・削除のボタンを出す（本当の確認は、サーバーが行う）
+  onEdit?: (post: Post) => void
+  onDelete?: (post: Post) => void
+}
+
+// 投稿 1 件のカード。いいね数・コメント数は、あとの機能で足す
+export default function PostCard({ post, onEdit, onDelete }: Props) {
   const { author } = post
   return (
     <Card component="article" variant="outlined">
@@ -28,11 +38,21 @@ export default function PostCard({ post }: { post: Post }) {
           </Box>
           {/* 本文は、文字として表示する（HTML として解釈しない）。改行は、そのまま見せる */}
           <Typography sx={{ mt: 0.5, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{post.body}</Typography>
-          {post.updatedAt && (
-            <Typography variant="caption" color="text.secondary">
-              編集済み
+          <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 28 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1 }}>
+              {post.updatedAt ? '編集済み' : ''}
             </Typography>
-          )}
+            {onEdit && (
+              <IconButton size="small" aria-label="編集" onClick={() => onEdit(post)}>
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+            )}
+            {onDelete && (
+              <IconButton size="small" aria-label="削除" onClick={() => onDelete(post)}>
+                <DeleteOutlinedIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
         </Box>
       </CardContent>
     </Card>

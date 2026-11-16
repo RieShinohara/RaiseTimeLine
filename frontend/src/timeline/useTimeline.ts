@@ -47,5 +47,15 @@ export function useTimeline() {
     setPosts((current) => [post, ...current.filter((p) => p.id !== post.id)])
   }, [])
 
-  return { posts, hasNext, loading, error, loadMore, prepend }
+  // 編集した投稿を、同じ場所で、置き換える
+  const replace = useCallback((post: Post) => {
+    setPosts((current) => current.map((p) => (p.id === post.id ? post : p)))
+  }, [])
+
+  // 削除した投稿を、一覧から外す
+  const remove = useCallback((id: number) => {
+    setPosts((current) => current.filter((p) => p.id !== id))
+  }, [])
+
+  return { posts, hasNext, loading, error, loadMore, prepend, replace, remove }
 }

@@ -39,20 +39,38 @@ export async function fetchPosts(page: number, size: number = PAGE_SIZE): Promis
   return (await res.json()) as PostPage
 }
 
-// 投稿する。ログインが要る（札を付けて送る。期限切れなら、http.ts が自動で更新する）
-export async function createPost(body: string): Promise<Post> {
+// ログインが要る呼び出し。札を付けて送る（期限切れなら、http.ts が自動で更新する）。
+// 失敗したときは、画面に出せる文言つきの ApiError にする
+async function callWithLogin(path: string, init: RequestInit): Promise<Response> {
   let res: Response
   try {
-    res = await apiFetch('/api/posts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body }),
-    })
+    res = await apiFetch(path, init)
   } catch {
     throw new ApiError(0, NETWORK_ERROR_MESSAGE)
   }
   // 401 の応答には、文言がない（Spring Security が、本文なしで返す）ので、ここで決める
   if (res.status === 401) throw new ApiError(401, 'ログインの期限が切れました。もう一度ログインしてください')
   if (!res.ok) throw new ApiError(res.status, await readMessage(res))
+  return res
+}
+
+function jsonBody(body: string): RequestInit {
+  return { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body }) }
+}
+
+// 投稿する
+export async function createPost(body: string): Promise<Post> {
+  const res = await callWithLogin('/api/posts', { method: 'POST', ...jsonBody(body) })
   return (await res.json()) as Post
+}
+
+// 自分の投稿の本文を直す（本人だけ。他の人の投稿は、サーバーが 403 で断る）
+export async function updatePost(id: number, body: string): Promise<Post> {
+  const res = await callWithLogin(`/api/posts/${id}`, { method: 'PUT', ...jsonBody(body) })
+  return (await res.json()) as Post
+}
+
+// 自分の投稿を消す（本人だけ。元に戻せない）
+export async function deletePost(id: number): Promise<void> {
+  await callWithLogin(`/api/posts/${id}`, { method: 'DELETE' })
 }
