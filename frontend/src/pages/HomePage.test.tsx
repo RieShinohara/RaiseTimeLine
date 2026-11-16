@@ -46,10 +46,12 @@ class FakeIntersectionObserver {
   }
 }
 
-function reachBottom() {
-  const observer = FakeIntersectionObserver.instances.at(-1)
-  expect(observer).toBeDefined()
-  act(() => observer!.reachBottom())
+// 「一番下まで進んだ」という合図を送る。
+// 投稿が画面に出た直後は、目印の見張りが、まだ作り直されていないことがある（読み込みが終わってから、作り直される）。
+// 見張りができるのを待ってから、合図を送る（待たないと、遅い環境〈CI〉でだけ、たまに失敗する）
+async function reachBottom() {
+  await waitFor(() => expect(FakeIntersectionObserver.instances.length).toBeGreaterThan(0))
+  act(() => FakeIntersectionObserver.instances.at(-1)!.reachBottom())
 }
 
 function timelineCalls() {
@@ -128,7 +130,7 @@ test('一番下まで進むと、続きを読み込み、同じ投稿は 2 回�
   expect(await screen.findByText('三番目')).toBeInTheDocument()
   expect(screen.queryByText('これ以上ありません')).not.toBeInTheDocument()
 
-  reachBottom()
+  await reachBottom()
 
   expect(await screen.findByText('一番目')).toBeInTheDocument()
   expect(timelineCalls()[1][0]).toBe('/api/posts?page=1&size=20')
