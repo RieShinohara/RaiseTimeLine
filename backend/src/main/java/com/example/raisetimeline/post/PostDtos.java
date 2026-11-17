@@ -33,8 +33,8 @@ public final class PostDtos {
 
 	}
 
-	// hasNext：このあとにも、続きがあるか（無限スクロールで、読み込みを続けるかの判断）
-	public record PostPageResponse(List<PostResponse> posts, int page, int size, boolean hasNext) {
+	// hasNext：このあとにも、続き（もっと古い投稿）があるか（無限スクロールで、読み込みを続けるかの判断）
+	public record PostPageResponse(List<PostResponse> posts, boolean hasNext) {
 	}
 
 	public record NewCountResponse(long count) {

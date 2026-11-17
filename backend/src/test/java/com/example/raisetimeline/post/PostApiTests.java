@@ -114,43 +114,60 @@ class PostApiTests {
 		String token = loginAsNewUser();
 		Number first = idOf(createPost(token, "古い投稿"));
 		Number second = idOf(createPost(token, "新しい投稿"));
-		mockMvc.perform(get("/api/posts").param("page", "0").param("size", "2"))
+		mockMvc.perform(get("/api/posts").param("size", "2"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.posts.length()").value(2))
 				.andExpect(jsonPath("$.posts[0].id").value(second.intValue()))
-				.andExpect(jsonPath("$.posts[1].id").value(first.intValue()))
-				.andExpect(jsonPath("$.page").value(0))
-				.andExpect(jsonPath("$.size").value(2));
+				.andExpect(jsonPath("$.posts[1].id").value(first.intValue()));
 	}
 
 	@Test
-	void ページをめくると続きが取れ最後のページではhasNextがfalse() throws Exception {
+	void beforeを渡すとそれより古い投稿だけが取れ最後ではhasNextがfalse() throws Exception {
 		String token = loginAsNewUser();
-		createPost(token, "ページ確認 1");
-		createPost(token, "ページ確認 2");
-		createPost(token, "ページ確認 3");
-		String page0 = mockMvc.perform(get("/api/posts").param("page", "0").param("size", "1"))
+		createPost(token, "続き確認 1");
+		createPost(token, "続き確認 2");
+		createPost(token, "続き確認 3");
+		String first = mockMvc.perform(get("/api/posts").param("size", "1"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.hasNext").value(true))
 				.andReturn().getResponse().getContentAsString();
-		String page1 = mockMvc.perform(get("/api/posts").param("page", "1").param("size", "1"))
+		Number id0 = JsonPath.read(first, "$.posts[0].id");
+		String second = mockMvc.perform(get("/api/posts").param("before", id0.toString()).param("size", "1"))
 				.andExpect(status().isOk())
 				.andReturn().getResponse().getContentAsString();
-		Number id0 = JsonPath.read(page0, "$.posts[0].id");
-		Number id1 = JsonPath.read(page1, "$.posts[0].id");
+		Number id1 = JsonPath.read(second, "$.posts[0].id");
 		assertThat(id1.longValue()).isLessThan(id0.longValue());
-		// 十分に先のページは空で、続きもない
-		mockMvc.perform(get("/api/posts").param("page", "100000").param("size", "50"))
+		// いちばん古い id より前は、空で、続きもない
+		mockMvc.perform(get("/api/posts").param("before", "1").param("size", "50"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.posts.length()").value(0))
 				.andExpect(jsonPath("$.hasNext").value(false));
 	}
 
 	@Test
-	void ページと件数の指定が範囲外なら400() throws Exception {
-		mockMvc.perform(get("/api/posts").param("page", "-1")).andExpect(status().isBadRequest());
+	void 読んでいる途中で新しい投稿や削除があっても重複も取りこぼしもない() throws Exception {
+		String token = loginAsNewUser();
+		Number oldest = idOf(createPost(token, "途中 1"));
+		Number middle = idOf(createPost(token, "途中 2"));
+		Number newest = idOf(createPost(token, "途中 3"));
+		String page = mockMvc.perform(get("/api/posts").param("size", "1"))
+				.andReturn().getResponse().getContentAsString();
+		assertThat(((Number) JsonPath.read(page, "$.posts[0].id")).longValue()).isEqualTo(newest.longValue());
+		// 1 ページ目を読んだあとに、新しい投稿が入り、すでに読んだ投稿が消えても、続きは、ずれない
+		createPost(token, "途中 4（読んだあとに入った）");
+		mockMvc.perform(delete("/api/posts/" + newest).header(HttpHeaders.AUTHORIZATION, bearer(token)))
+				.andExpect(status().isNoContent());
+		mockMvc.perform(get("/api/posts").param("before", newest.toString()).param("size", "2"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.posts[0].id").value(middle.intValue()))
+				.andExpect(jsonPath("$.posts[1].id").value(oldest.intValue()));
+	}
+
+	@Test
+	void 件数の指定が範囲外ならまたはbeforeが数字でなければ400() throws Exception {
 		mockMvc.perform(get("/api/posts").param("size", "0")).andExpect(status().isBadRequest());
 		mockMvc.perform(get("/api/posts").param("size", "51")).andExpect(status().isBadRequest());
+		mockMvc.perform(get("/api/posts").param("before", "きのう")).andExpect(status().isBadRequest());
 	}
 
 	@Test
@@ -201,29 +218,30 @@ class PostApiTests {
 	}
 
 	@Test
-	void 新着件数は指定日時より新しい他の人の投稿だけを数える() throws Exception {
+	void 新着件数は指定idより新しい他の人の投稿だけを数える() throws Exception {
 		String mine = loginAsNewUser();
 		String other = loginAsNewUser();
-		// サーバーが返した日時を、変換せずに、そのまま since にする（自分自身が、新着に数えられないことの確認）
-		String since = JsonPath.read(createPost(mine, "基準の投稿"), "$.createdAt");
-		mockMvc.perform(get("/api/posts/new-count").param("since", since))
+		// 基準の投稿の id（自分自身が、新着に数えられないことの確認）
+		String after = idOf(createPost(mine, "基準の投稿")).toString();
+		mockMvc.perform(get("/api/posts/new-count").param("after", after))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.count").value(0));
 		createPost(other, "他の人の新着");
 		createPost(mine, "自分の新着");
 		// ログイン中は、自分の投稿を数えない
-		mockMvc.perform(get("/api/posts/new-count").param("since", since)
+		mockMvc.perform(get("/api/posts/new-count").param("after", after)
 				.header(HttpHeaders.AUTHORIZATION, bearer(mine)))
 				.andExpect(jsonPath("$.count").value(1));
 		// ログインなしは、全部数える
-		mockMvc.perform(get("/api/posts/new-count").param("since", since))
+		mockMvc.perform(get("/api/posts/new-count").param("after", after))
 				.andExpect(jsonPath("$.count").value(2));
 	}
 
 	@Test
-	void 新着件数のsinceがないか形が違うと400() throws Exception {
+	void 新着件数のafterがないか負の数か数字でないと400() throws Exception {
 		mockMvc.perform(get("/api/posts/new-count")).andExpect(status().isBadRequest());
-		mockMvc.perform(get("/api/posts/new-count").param("since", "きのう")).andExpect(status().isBadRequest());
+		mockMvc.perform(get("/api/posts/new-count").param("after", "-1")).andExpect(status().isBadRequest());
+		mockMvc.perform(get("/api/posts/new-count").param("after", "きのう")).andExpect(status().isBadRequest());
 	}
 
 }
