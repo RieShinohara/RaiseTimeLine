@@ -55,23 +55,33 @@ public class PostService {
 
 	public PostResponse update(Long userId, Long id, String body) {
 		Post post = findOwned(userId, id);
-		// 本文が同じなら、更新しない（「編集済み」にしない）
-		if (!body.equals(post.getBody())) {
-			postMapper.updateBody(id, body);
+		// 本文が同じなら、更新しない（「編集済み」にしない）。
+		// 更新の SQL にも本人の条件があるので、確認のあとに投稿が消されると、0 件になる → 404（B8）
+		if (!body.equals(post.getBody()) && postMapper.updateBody(id, userId, body) == 0) {
+			throw notFound();
 		}
-		return PostResponse.from(postMapper.findById(id));
+		Post updated = postMapper.findById(id);
+		if (updated == null) {
+			throw notFound();
+		}
+		return PostResponse.from(updated);
 	}
 
 	public void delete(Long userId, Long id) {
 		findOwned(userId, id);
-		postMapper.deleteById(id);
+		// すでに消えていても（確認のあとに、ほかで消された）、結果は同じ「消えている」ので、件数は見ない
+		postMapper.deleteById(id, userId);
+	}
+
+	private static ApiException notFound() {
+		return new ApiException(HttpStatus.NOT_FOUND, "投稿が見つかりません");
 	}
 
 	// 編集・削除は、本人だけ。他の人の投稿は、サーバー側でも拒否する
 	private Post findOwned(Long userId, Long id) {
 		Post post = postMapper.findById(id);
 		if (post == null) {
-			throw new ApiException(HttpStatus.NOT_FOUND, "投稿が見つかりません");
+			throw notFound();
 		}
 		if (!post.getUserId().equals(userId)) {
 			throw new ApiException(HttpStatus.FORBIDDEN, "他の人の投稿は、編集・削除できません");

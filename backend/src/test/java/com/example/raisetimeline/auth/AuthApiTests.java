@@ -118,6 +118,28 @@ class AuthApiTests {
 	}
 
 	@Test
+	void 入力の誤りが複数のときは項目の順の先頭の1件を返す() throws Exception {
+		String s = suffix();
+		// 項目の順：メール → パスワード → ユーザー名 → 表示名。
+		// メールとパスワードが誤り → メールが先。**以前の並べ方（メッセージの日本語の文字順）では、「パスワードは…」が先に出た**ので、
+		// この組み合わせが、新旧の違いを確かめられる（ほかの組み合わせは、偶然、同じ結果になる）
+		mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+				.content(registerJson("not-an-email", "short1", "u_" + s, "名前")))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("メールアドレスの形が正しくありません"));
+		// 全部が誤り → いちばん前の項目（メール）
+		mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+				.content(registerJson("not-an-email", "short1", "a", "")))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("メールアドレスの形が正しくありません"));
+		// パスワードとユーザー名が誤り → パスワードが先
+		mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+				.content(registerJson("e_" + s + "@example.com", "short1", "a", "名前")))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.startsWith("パスワードは")));
+	}
+
+	@Test
 	void 登録からログイン更新ログアウトまで通る() throws Exception {
 		String s = suffix();
 		String email = "flow_" + s + "@example.com";
