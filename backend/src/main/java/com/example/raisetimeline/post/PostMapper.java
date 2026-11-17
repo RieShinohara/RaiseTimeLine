@@ -48,10 +48,11 @@ public interface PostMapper {
 	@Select("SELECT COUNT(*) FROM posts WHERE id > #{after} AND user_id <> #{userId}")
 	long countNewerThanExcludingUser(@Param("after") long after, @Param("userId") Long userId);
 
-	@Update("UPDATE posts SET body = #{body}, updated_at = now() WHERE id = #{id}")
-	int updateBody(@Param("id") Long id, @Param("body") String body);
+	// 本人の投稿だけを更新する（user_id も条件に入れる）。確認と更新の間に、投稿が消された・持ち主が違う場合は、0 件になる（B8）
+	@Update("UPDATE posts SET body = #{body}, updated_at = now() WHERE id = #{id} AND user_id = #{userId}")
+	int updateBody(@Param("id") Long id, @Param("userId") Long userId, @Param("body") String body);
 
-	@Delete("DELETE FROM posts WHERE id = #{id}")
-	int deleteById(@Param("id") Long id);
+	@Delete("DELETE FROM posts WHERE id = #{id} AND user_id = #{userId}")
+	int deleteById(@Param("id") Long id, @Param("userId") Long userId);
 
 }

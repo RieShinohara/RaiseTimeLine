@@ -12,11 +12,18 @@ public final class PostDtos {
 	private PostDtos() {
 	}
 
-	// 投稿・編集の入力。空は不可、280 文字まで
+	// 投稿・編集の入力。空は不可、280 文字まで。本文の前後の空白は、取ってから検査・保存する（B9）。
+	// 検査（@NotBlank・@Size）は、このコンストラクタのあとに行われるので、取った後の文字数で数える
 	public record PostRequest(
 			@NotBlank(message = "本文を入力してください")
 			@Size(max = 280, message = "本文は 280 文字までです")
 			String body) {
+
+		public PostRequest {
+			// strip() は、全角の空白も取る（trim() は、半角の空白と制御文字だけ）
+			body = body == null ? null : body.strip();
+		}
+
 	}
 
 	// 投稿者。メールアドレスは、他の人に見せない（入れない）
