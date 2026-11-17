@@ -1,7 +1,5 @@
 package com.example.raisetimeline.post;
 
-import java.time.Instant;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,15 +33,16 @@ public class PostController {
 
 	// タイムライン（新しい順）。ログインなしで見られる（TL-3）
 	@GetMapping
-	public PostPageResponse list(@RequestParam(defaultValue = "0") int page,
+	// before：この投稿 id より古いものを返す（省略なら最新から）
+	public PostPageResponse list(@RequestParam(required = false) Long before,
 			@RequestParam(defaultValue = "20") int size) {
-		return postService.list(page, size);
+		return postService.list(before, size);
 	}
 
-	// since より新しい投稿の件数（30 秒ごとの確認用）。since は、サーバーが返した日時を、そのまま渡す
+	// after（投稿 id）より新しい投稿の件数（30 秒ごとの確認用）。投稿が 1 件もないときは、after=0
 	@GetMapping("/new-count")
-	public NewCountResponse newCount(@RequestParam Instant since, @AuthenticationPrincipal Long userId) {
-		return postService.newCount(since, userId);
+	public NewCountResponse newCount(@RequestParam long after, @AuthenticationPrincipal Long userId) {
+		return postService.newCount(after, userId);
 	}
 
 	@PostMapping

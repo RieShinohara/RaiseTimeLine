@@ -1,6 +1,5 @@
 package com.example.raisetimeline.post;
 
-import java.time.Instant;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -22,23 +21,27 @@ public class PostService {
 		this.postMapper = postMapper;
 	}
 
-	public PostPageResponse list(int page, int size) {
-		if (page < 0 || size < 1 || size > MAX_SIZE) {
-			throw new ApiException(HttpStatus.BAD_REQUEST,
-					"page は 0 以上、size は 1〜" + MAX_SIZE + " で指定してください");
+	// before：この id より古い投稿を返す（空なら最新から）。size：1〜50
+	public PostPageResponse list(Long before, int size) {
+		if (size < 1 || size > MAX_SIZE) {
+			throw new ApiException(HttpStatus.BAD_REQUEST, "size は 1〜" + MAX_SIZE + " で指定してください");
 		}
 		// 1 件多く読んで、続きがあるかを知る
-		List<Post> rows = postMapper.findPage(size + 1, (long) page * size);
+		List<Post> rows = postMapper.findOlderThan(before, size + 1);
 		boolean hasNext = rows.size() > size;
 		List<PostResponse> posts = rows.stream().limit(size).map(PostResponse::from).toList();
-		return new PostPageResponse(posts, page, size, hasNext);
+		return new PostPageResponse(posts, hasNext);
 	}
 
-	// ログイン中なら、自分の投稿は数えない（自分が投稿したときは、一番上にすぐ出るため）
-	public NewCountResponse newCount(Instant since, Long userId) {
+	// after より新しい（id が大きい）投稿の件数。ログイン中なら、自分の投稿は数えない
+	// （自分が投稿したときは、一番上にすぐ出るため）
+	public NewCountResponse newCount(long after, Long userId) {
+		if (after < 0) {
+			throw new ApiException(HttpStatus.BAD_REQUEST, "after は 0 以上で指定してください");
+		}
 		long count = userId == null
-				? postMapper.countNewSince(since)
-				: postMapper.countNewSinceExcludingUser(since, userId);
+				? postMapper.countNewerThan(after)
+				: postMapper.countNewerThanExcludingUser(after, userId);
 		return new NewCountResponse(count);
 	}
 
