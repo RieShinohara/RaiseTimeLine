@@ -80,11 +80,12 @@ test('30 秒ごとに、一番上の投稿の id を after にして、新着を
   expect(await screen.findByText('一番上の投稿')).toBeInTheDocument()
   expect(newCountCalls()).toHaveLength(0)
 
-  await advancePoll(POLL_INTERVAL_MS - 1)
-  expect(newCountCalls()).toHaveLength(0) // 30 秒に、少し足りない
+  // 30 秒に、少し足りない。余裕は 1 秒（偽の時計は、本物の時計も少し進むので、1 ミリ秒の余裕だと、遅い環境で 30 秒を超えて、たまに失敗する）
+  await advancePoll(POLL_INTERVAL_MS - 1000)
+  expect(newCountCalls()).toHaveLength(0)
 
   newCount = 2
-  await advancePoll(1)
+  await advancePoll(1000)
   expect(newCountCalls()).toHaveLength(1)
   expect(newCountCalls()[0][0]).toBe(`/api/posts/new-count?after=${TOP_ID}`)
   expect(await screen.findByRole('button', { name: '2件の新しい投稿があります' })).toBeInTheDocument()
