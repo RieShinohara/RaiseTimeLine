@@ -20,18 +20,18 @@ export interface Post {
 
 export interface PostPage {
   posts: Post[]
-  page: number
-  size: number
   hasNext: boolean
 }
 
 export const PAGE_SIZE = 20
 
-// タイムラインを読む。ログインなしで見られるので、札は付けない
-export async function fetchPosts(page: number, size: number = PAGE_SIZE): Promise<PostPage> {
+// タイムラインを読む。before（投稿 id）を渡すと、それより古い投稿を読む（省略すると最新から）。
+// ログインなしで見られるので、札は付けない
+export async function fetchPosts(before?: number, size: number = PAGE_SIZE): Promise<PostPage> {
+  const query = before === undefined ? `size=${size}` : `before=${before}&size=${size}`
   let res: Response
   try {
-    res = await fetch(`/api/posts?page=${page}&size=${size}`)
+    res = await fetch(`/api/posts?${query}`)
   } catch {
     throw new ApiError(0, NETWORK_ERROR_MESSAGE)
   }
@@ -39,14 +39,13 @@ export async function fetchPosts(page: number, size: number = PAGE_SIZE): Promis
   return (await res.json()) as PostPage
 }
 
-// since より新しい投稿の件数（新着の確認用）。ログイン中は、自分の投稿を数えない（サーバーが判断）。
-// since は、サーバーが返した日時の文字列を、変換せずに渡す（変換すると、細かい桁が落ちて、一番上の投稿自身が数えられることがある）
-export async function fetchNewCount(since: string): Promise<number> {
+// after（投稿 id）より新しい投稿の件数（新着の確認用）。ログイン中は、自分の投稿を数えない（サーバーが判断）
+export async function fetchNewCount(after: number): Promise<number> {
   // 札の期限が切れていると、サーバーは「ログインなし」として数える。先に更新しておく
   await refreshIfExpired()
   let res: Response
   try {
-    res = await apiFetch(`/api/posts/new-count?since=${encodeURIComponent(since)}`)
+    res = await apiFetch(`/api/posts/new-count?after=${after}`)
   } catch {
     throw new ApiError(0, NETWORK_ERROR_MESSAGE)
   }

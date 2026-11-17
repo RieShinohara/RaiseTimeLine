@@ -19,8 +19,8 @@ function post(id: number, body: string, extra: Partial<Post> = {}): Post {
   }
 }
 
-function page(posts: Post[], pageNo = 0, hasNext = false): PostPage {
-  return { posts, page: pageNo, size: 20, hasNext }
+function page(posts: Post[], hasNext = false): PostPage {
+  return { posts, hasNext }
 }
 
 const fetchMock = vi.fn()
@@ -77,7 +77,7 @@ test('タイムラインは、ログインなしで見られる（札は付け�
   renderApp('/')
 
   expect(await screen.findByText('二番目の投稿')).toBeInTheDocument()
-  expect(fetchMock.mock.calls[0][0]).toBe('/api/posts?page=0&size=20')
+  expect(fetchMock.mock.calls[0][0]).toBe('/api/posts?size=20')
   // 並びは、サーバーが返した順（新しい順）のまま
   const articles = screen.getAllByRole('article')
   expect(within(articles[0]).getByText('二番目の投稿')).toBeInTheDocument()
@@ -118,14 +118,13 @@ test('読み込みに失敗したら理由を出し、「もう一度」で、�
 
   expect(await screen.findByText('やり直したら読めた')).toBeInTheDocument()
   expect(screen.queryByText(/読み込めませんでした/)).not.toBeInTheDocument()
-  // 失敗したときは、ページを進めない（0 ページ目を 2 回読んでいる）
-  expect(timelineCalls().map(([url]) => url)).toEqual(['/api/posts?page=0&size=20', '/api/posts?page=0&size=20'])
+  // 失敗したときは、目印を進めない（最新からの読み込みを 2 回している）
+  expect(timelineCalls().map(([url]) => url)).toEqual(['/api/posts?size=20', '/api/posts?size=20'])
 })
 
-test('一番下まで進むと、続きを読み込み、同じ投稿は 2 回出さない', async () => {
-  fetchMock.mockResolvedValueOnce(jsonResponse(200, page([post(3, '三番目'), post(2, '二番目')], 0, true)))
-  // 2 ページ目の先頭は、1 ページ目の最後と、同じ投稿（新しい投稿が入って、ずれたときの再現）
-  fetchMock.mockResolvedValueOnce(jsonResponse(200, page([post(2, '二番目'), post(1, '一番目')], 1, false)))
+test('一番下まで進むと、いちばん古い投稿の id を before にして、続きを読み込む', async () => {
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, page([post(3, '三番目'), post(2, '二番目')], true)))
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, page([post(1, '一番目')], false)))
   renderApp('/')
   expect(await screen.findByText('三番目')).toBeInTheDocument()
   expect(screen.queryByText('これ以上ありません')).not.toBeInTheDocument()
@@ -133,8 +132,7 @@ test('一番下まで進むと、続きを読み込み、同じ投稿は 2 回�
   await reachBottom()
 
   expect(await screen.findByText('一番目')).toBeInTheDocument()
-  expect(timelineCalls()[1][0]).toBe('/api/posts?page=1&size=20')
-  expect(screen.getAllByText('二番目')).toHaveLength(1)
+  expect(timelineCalls()[1][0]).toBe('/api/posts?before=2&size=20')
   expect(screen.getAllByRole('article')).toHaveLength(3)
   // 続きがないので、これ以上は読まない
   expect(await screen.findByText('これ以上ありません')).toBeInTheDocument()
