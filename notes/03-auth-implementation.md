@@ -61,7 +61,7 @@ DB の表は、`src/main/resources/db/migration/V1__...sql`（Flyway）が作る
 |---|---|
 | `api/auth.ts` | 認証 API を呼ぶ関数（札なし）。サーバーの `{"message"}` を取り出す。つながらないときは「サーバーにつながりません」 |
 | `api/http.ts` | **ログインが要る API を呼ぶ共通の入口**。札を付ける・401 で自動更新 |
-| `auth/tokenStorage.ts` | localStorage の出し入れ。使えなくても落ちない。**読んだユーザー情報は、形（`id` が数、`email`・`username`・`displayName` が文字列）を確かめ、違えばログインしていない状態にする**（品質チェック F2。2026-11-18）。「型を付ける（`as`）」だけでは、実行時には何も確かめない。JSON を読むときは、**中身を、実際に確かめる** |
+| `auth/tokenStorage.ts` | localStorage の出し入れ。使えなくても落ちない。**読んだユーザー情報は、形（`id` が数、`email`・`username`・`displayName` が文字列）を確かめ、違えばログインしていない状態にする**（品質チェック F2。2026-11-17）。「型を付ける（`as`）」だけでは、実行時には何も確かめない。JSON を読むときは、**中身を、実際に確かめる** |
 | `auth/AuthContext.tsx`・`useAuth.ts` | 「今ログイン中の人」を、画面全体で共有する |
 | `auth/validators.ts` | 登録の入力チェック（バックエンドと同じ条件。親切のための早めの確認で、本当の確認はサーバー） |
 | `pages/`・`components/Header.tsx` | ログイン・登録・トップの画面、ヘッダー |
