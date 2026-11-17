@@ -34,6 +34,9 @@ class PostApiTests {
 	@Autowired
 	private MockMvc mockMvc;
 
+	@Autowired
+	private PostMapper postMapper;
+
 	private static String suffix() {
 		return UUID.randomUUID().toString().replace("-", "").substring(0, 10);
 	}
@@ -107,6 +110,47 @@ class PostApiTests {
 		}
 		createPost(token, "あ".repeat(280));
 		createPost(token, "a");
+	}
+
+	@Test
+	void 本文の前後の空白は取って保存され空白だけは400() throws Exception {
+		String token = loginAsNewUser();
+		// 半角・全角の空白と改行を取る。途中の空白・改行は、そのまま
+		mockMvc.perform(post("/api/posts").header(HttpHeaders.AUTHORIZATION, bearer(token))
+				.contentType(MediaType.APPLICATION_JSON).content(bodyJson("  \\n　前後に空白\\n途中の改行は残る  \\n")))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.body").value("前後に空白\n途中の改行は残る"));
+		// 取ったあとで 280 文字なら通る（前後の空白は、文字数に数えない）
+		mockMvc.perform(post("/api/posts").header(HttpHeaders.AUTHORIZATION, bearer(token))
+				.contentType(MediaType.APPLICATION_JSON).content(bodyJson("  " + "あ".repeat(280) + "  ")))
+				.andExpect(status().isCreated());
+		// 空白だけは、取ると空になるので 400
+		mockMvc.perform(post("/api/posts").header(HttpHeaders.AUTHORIZATION, bearer(token))
+				.contentType(MediaType.APPLICATION_JSON).content(bodyJson("　 \\n ")))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void 前後の空白だけが違う編集は変更とみなさず編集済みにしない() throws Exception {
+		String token = loginAsNewUser();
+		Number id = idOf(createPost(token, "そのまま"));
+		mockMvc.perform(put("/api/posts/" + id).header(HttpHeaders.AUTHORIZATION, bearer(token))
+				.contentType(MediaType.APPLICATION_JSON).content(bodyJson("  そのまま  ")))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.body").value("そのまま"))
+				.andExpect(jsonPath("$.updatedAt").doesNotExist());
+	}
+
+	@Test
+	void 更新と削除のSQLは本人の投稿だけを対象にし持ち主が違えば0件() throws Exception {
+		String owner = loginAsNewUser();
+		Number id = idOf(createPost(owner, "持ち主の投稿"));
+		Long otherUserId = Long.MAX_VALUE;
+		// 確認のあとに、持ち主が違う・投稿がない状態になっても、0 件になるだけで、何も変えない（B8）
+		assertThat(postMapper.updateBody(id.longValue(), otherUserId, "のっとり")).isZero();
+		assertThat(postMapper.deleteById(id.longValue(), otherUserId)).isZero();
+		assertThat(postMapper.findById(id.longValue()).getBody()).isEqualTo("持ち主の投稿");
+		assertThat(postMapper.updateBody(999_999_999L, otherUserId, "x")).isZero();
 	}
 
 	@Test
