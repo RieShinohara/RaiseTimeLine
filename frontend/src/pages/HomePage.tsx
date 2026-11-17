@@ -22,8 +22,8 @@ import { useTimeline } from '../timeline/useTimeline'
 // トップ画面：タイムライン（全体）。ログインなしで見られる。「フォロー中」は、フォローの機能のときに足す
 export default function HomePage() {
   const { user } = useAuth()
-  const { posts, hasNext, loading, error, syncedAt, loadMore, reload, prepend, replace, remove } = useTimeline()
-  const newCount = useNewPostsCount(syncedAt)
+  const { posts, hasNext, loading, error, syncedId, loadMore, reload, prepend, replace, remove } = useTimeline()
+  const newCount = useNewPostsCount(syncedId)
   const [composing, setComposing] = useState(false)
   // 編集中の投稿・削除の確認中の投稿（なければ null）
   const [editing, setEditing] = useState<Post | null>(null)

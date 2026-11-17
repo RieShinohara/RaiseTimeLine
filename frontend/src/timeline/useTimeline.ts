@@ -1,19 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchPosts, type Post } from '../api/posts'
 
-// 同じ id の投稿は、2 回出さない。
-// ページ番号方式は、新しい投稿が入ると、全体がずれて、同じ投稿が、また出ることがあるため
-export function appendUnique(current: Post[], incoming: Post[]): Post[] {
-  const seen = new Set(current.map((p) => p.id))
-  return [...current, ...incoming.filter((p) => !seen.has(p.id))]
-}
+// 投稿が 1 件もないときの、「ここより新しい」の基準（id は 1 から始まるので、0 より大きい投稿は、すべて新着）
+export const NO_POSTS_ID = 0
 
-// 投稿が 1 件もないときの、「ここより新しい」の基準（これより新しい投稿は、すべて新着）
-export const EPOCH = '1970-01-01T00:00:00Z'
-
-// 1 ページ目の、一番上の投稿の日時（サーバーが返した文字列のまま）。投稿がなければ EPOCH
-function topCreatedAt(posts: Post[]): string {
-  return posts[0]?.createdAt ?? EPOCH
+// 1 ページ目の、一番上の投稿の id。投稿がなければ NO_POSTS_ID
+function topId(posts: Post[]): number {
+  return posts[0]?.id ?? NO_POSTS_ID
 }
 
 // タイムライン（全体）の、投稿の並びと、続きの読み込み
@@ -22,11 +15,13 @@ export function useTimeline() {
   const [hasNext, setHasNext] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // サーバーと同期した時点の「一番上の投稿の日時」。新着の確認（new-count）の基準。
+  // サーバーと同期した時点の「一番上の投稿の id」。新着の確認（new-count）の基準。
   // 自分の投稿を足しても変えない（変えると、その間の、他の人の新着を取りこぼす）。1 ページ目を読んだときだけ更新する
-  const [syncedAt, setSyncedAt] = useState<string | null>(null)
-  // 次に読むページ。読み込みが成功したときだけ進める（失敗したら、同じページをやり直せる）
-  const nextPage = useRef(0)
+  const [syncedId, setSyncedId] = useState<number | null>(null)
+  // 続きを読む目印：これまでに読んだ中で、いちばん古い投稿の id（「ここより古いもの」を読む）。
+  // undefined は、まだ何も読んでいない（最新から読む）。読み込みが成功したときだけ進める（失敗したら、同じ所をやり直せる）。
+  // 一覧（posts）の最後ではなく、読んだ結果から決める（自分の投稿の追加や削除に、影響されない）
+  const cursor = useRef<number | undefined>(undefined)
   // 読み込み中に、もう一度始めない（画面の再描画や、スクロールの連続で、二重にならないように）
   const busy = useRef(false)
 
@@ -36,11 +31,11 @@ export function useTimeline() {
     setLoading(true)
     setError(null)
     try {
-      const page = nextPage.current
-      const result = await fetchPosts(page)
-      nextPage.current = page + 1
-      if (page === 0) setSyncedAt(topCreatedAt(result.posts))
-      setPosts((current) => appendUnique(current, result.posts))
+      const before = cursor.current
+      const result = await fetchPosts(before)
+      cursor.current = result.posts.at(-1)?.id ?? before
+      if (before === undefined) setSyncedId(topId(result.posts))
+      setPosts((current) => [...current, ...result.posts])
       setHasNext(result.hasNext)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'エラーが起きました')
@@ -56,9 +51,9 @@ export function useTimeline() {
     if (busy.current) return false
     busy.current = true
     try {
-      const result = await fetchPosts(0)
-      nextPage.current = 1
-      setSyncedAt(topCreatedAt(result.posts))
+      const result = await fetchPosts()
+      cursor.current = result.posts.at(-1)?.id
+      setSyncedId(topId(result.posts))
       setPosts(result.posts)
       setHasNext(result.hasNext)
       setError(null)
@@ -90,5 +85,5 @@ export function useTimeline() {
     setPosts((current) => current.filter((p) => p.id !== id))
   }, [])
 
-  return { posts, hasNext, loading, error, syncedAt, loadMore, reload, prepend, replace, remove }
+  return { posts, hasNext, loading, error, syncedId, loadMore, reload, prepend, replace, remove }
 }

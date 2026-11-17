@@ -9,7 +9,8 @@ import { POLL_INTERVAL_MS } from '../timeline/useNewPostsCount'
 
 // 新着の確認（30 秒ごとのポーリング）と、浮かぶバナーのテスト。サンプルは、すべて架空
 const DEMO_USER = { id: 1, email: 'demo@example.com', username: 'demo_user', displayName: 'デモ' }
-// サーバーが返す、細かい桁（マイクロ秒）まである日時。画面は、これを変換せずに、since に使う
+// 1 ページ目の一番上の投稿の id。画面は、これを after にして新着を確かめる
+const TOP_ID = 10
 const TOP_CREATED_AT = '2026-11-16T05:30:00.123456Z'
 
 function post(id: number, body: string, createdAt = TOP_CREATED_AT, authorId = 2): Post {
@@ -23,7 +24,7 @@ function post(id: number, body: string, createdAt = TOP_CREATED_AT, authorId = 2
 }
 
 function page(posts: Post[]): PostPage {
-  return { posts, page: 0, size: 20, hasNext: false }
+  return { posts, hasNext: false }
 }
 
 // サーバーの、偽物の状態（テストごとに書き換える）
@@ -74,7 +75,7 @@ afterEach(() => {
   delete document.visibilityState
 })
 
-test('30 秒ごとに、一番上の投稿の日時（変換せず）を since にして、新着を確かめ、あればバナーを出す', async () => {
+test('30 秒ごとに、一番上の投稿の id を after にして、新着を確かめ、あればバナーを出す', async () => {
   renderApp('/')
   expect(await screen.findByText('一番上の投稿')).toBeInTheDocument()
   expect(newCountCalls()).toHaveLength(0)
@@ -85,7 +86,7 @@ test('30 秒ごとに、一番上の投稿の日時（変換せず）を since �
   newCount = 2
   await advancePoll(1)
   expect(newCountCalls()).toHaveLength(1)
-  expect(newCountCalls()[0][0]).toBe(`/api/posts/new-count?since=${encodeURIComponent(TOP_CREATED_AT)}`)
+  expect(newCountCalls()[0][0]).toBe(`/api/posts/new-count?after=${TOP_ID}`)
   expect(await screen.findByRole('button', { name: '2件の新しい投稿があります' })).toBeInTheDocument()
 })
 
@@ -118,11 +119,9 @@ test('バナーを押すと、1 ページ目を読み直して、一番上へス
   await waitFor(() =>
     expect(screen.queryByRole('button', { name: /件の新しい投稿があります/ })).not.toBeInTheDocument(),
   )
-  // 次からは、新しい一番上の日時を、基準にする
+  // 次からは、新しい一番上の id を、基準にする
   await advancePoll()
-  expect(newCountCalls().at(-1)![0]).toBe(
-    `/api/posts/new-count?since=${encodeURIComponent('2026-11-16T05:31:00.000001Z')}`,
-  )
+  expect(newCountCalls().at(-1)![0]).toBe('/api/posts/new-count?after=11')
 })
 
 test('バナーを押して読み直しに失敗したら、バナーは残り、スクロールもしない', async () => {
@@ -174,7 +173,7 @@ test('確かめるのに失敗しても、何も出さず、次の確認（30 �
   expect(await screen.findByRole('button', { name: '1件の新しい投稿があります' })).toBeInTheDocument()
 })
 
-test('続き（2 ページ目）を読み込んでも、基準の日時は、1 ページ目の一番上のまま', async () => {
+test('続きを読み込んでも、基準の id は、1 ページ目の一番上のまま。続きは、いちばん古い id を before にして読む', async () => {
   // 画面の一番下の目印が見えた、という合図を、自分で送るための偽物（jsdom には、本物がない）
   const observers: { callback: IntersectionObserverCallback }[] = []
   class FakeIntersectionObserver {
@@ -192,12 +191,12 @@ test('続き（2 ページ目）を読み込んでも、基準の日時は、1 �
   }
   vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver)
 
-  timeline = { posts: [post(10, '一番上の投稿')], page: 0, size: 20, hasNext: true }
+  timeline = { posts: [post(10, '一番上の投稿')], hasNext: true }
   fetchMock.mockImplementation((url: string) => {
     if (url.startsWith('/api/posts/new-count')) return Promise.resolve(jsonResponse(200, { count: 0 }))
-    if (url.startsWith('/api/posts?page=1')) {
+    if (url.startsWith('/api/posts?before=10')) {
       const older = post(5, '古い投稿', '2026-11-10T00:00:00.000000Z')
-      return Promise.resolve(jsonResponse(200, { posts: [older], page: 1, size: 20, hasNext: false }))
+      return Promise.resolve(jsonResponse(200, { posts: [older], hasNext: false }))
     }
     return Promise.resolve(jsonResponse(200, timeline))
   })
@@ -209,11 +208,11 @@ test('続き（2 ページ目）を読み込んでも、基準の日時は、1 �
   expect(await screen.findByText('古い投稿')).toBeInTheDocument()
 
   await advancePoll()
-  // 古い投稿（11/10）の日時ではなく、1 ページ目の一番上（11/16）が、基準のまま
-  expect(newCountCalls()[0][0]).toBe(`/api/posts/new-count?since=${encodeURIComponent(TOP_CREATED_AT)}`)
+  // 古い投稿（id 5）ではなく、1 ページ目の一番上（id 10）が、基準のまま
+  expect(newCountCalls()[0][0]).toBe(`/api/posts/new-count?after=${TOP_ID}`)
 })
 
-test('自分が投稿しても、基準の日時は変わらない（その間の、他の人の新着を取りこぼさない）', async () => {
+test('自分が投稿しても、基準の id は変わらない（その間の、他の人の新着を取りこぼさない）', async () => {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
   const validToken = fakeJwt(Math.floor(Date.now() / 1000) + 600)
   saveSession({ accessToken: validToken, refreshToken: 'refresh-1', user: DEMO_USER })
@@ -231,8 +230,8 @@ test('自分が投稿しても、基準の日時は変わらない（その間�
 
   await advancePoll()
   const [url, init] = newCountCalls()[0]
-  // 基準は、自分の投稿（05:40）ではなく、サーバーと同期したときの一番上（05:30）のまま
-  expect(url).toBe(`/api/posts/new-count?since=${encodeURIComponent(TOP_CREATED_AT)}`)
+  // 基準は、自分の投稿（id 12）ではなく、サーバーと同期したときの一番上（id 10）のまま
+  expect(url).toBe(`/api/posts/new-count?after=${TOP_ID}`)
   // ログイン中なので、札を付けて確かめる（サーバーが、自分の投稿を数えないため）
   expect(new Headers(init.headers).get('Authorization')).toBe(`Bearer ${validToken}`)
 })
