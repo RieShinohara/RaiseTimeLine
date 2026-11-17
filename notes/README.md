@@ -12,3 +12,4 @@ AIエンジニア養成コースの学習記録です。Claude Code と一緒に
 | [05-posts-api.md](05-posts-api.md) | 投稿の API：API 設計の表の読み方、状態コード（401 と 403）、N+1 を避ける JOIN、ページ番号方式の弱点、日時の細かさ |
 | [06-timeline-frontend.md](06-timeline-frontend.md) | タイムラインの画面：無限スクロール（IntersectionObserver）、フック、続きの目印（id 方式）、モーダルの作り |
 | [07-quality-check-2.md](07-quality-check-2.md) | 品質チェック（2回目）：確認と実行の間の競合、動かして確かめる、ボタンの名前と読み上げ、N+1 の予行 |
+| [08-review-a.md](08-review-a.md) | 復習 A（問題と自分の答え）：全体の地図、画面と DB の間にサーバーを置く理由、画面とサーバーの二重チェック、JWT の署名、札の自動更新 |
