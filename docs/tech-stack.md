@@ -18,7 +18,7 @@
 | 認証 | **Spring Security ＋ JWT**（`jjwt`）。パスワードは BCrypt | 2026-11-14 決定、2026-11-15 更新（[01 認証](features/01-auth.md) 3.5）。**アクセストークン 15 分 ＋ リフレッシュトークン 7 日**（リフレッシュは UUID で DB に保存）。JWT の署名の鍵は、リポジトリに入れない |
 | DB の構造の管理 | Flyway | `ddl-auto` は `validate` |
 | 画面 | React 19.3.1 ＋ TypeScript 7.0.2 | |
-| 画面のビルド | Vite 8.3.4 | |
+| 画面のビルド | Vite 8.3.8 | |
 | UI の部品・見た目 | **Material UI**（`@mui/material`） | TaskManagement の Tailwind CSS からの変更。**版は 9.5.0 に確定**（2026-11-15。最新。React 19.3.1・TypeScript 7.0.2・Vite 8.3.8 で、テスト・静的チェック・ビルド・ブラウザ表示が動くことを確かめた。先生は 7。部品の使い方が、講義と違うことがある）。あわせて `@emotion/react`・`@emotion/styled`（Material UI が使う部品） |
 | アイコン | **`@mui/icons-material`** | **9.5.0 に確定**（2026-11-16。ユーザーが「入れてください」と決定。講義 28 の画面で、編集・削除のアイコンが要る。⑥のハート・コメントでも使う）。`@mui/material` と同じ 9.5.0（peerDependencies は `@mui/material ^9.5.0`）。**使うアイコンだけを、1 つずつ import する**（例：`@mui/icons-material/EditOutlined`。約 4 万個あるので、まとめて import しない）。線の細い版の名前は `〇〇Outlined`（`DeleteOutlined`。`DeleteOutline` ではない） |
 | 画面のテスト | Vitest 5.0.4 | |
@@ -44,7 +44,7 @@
 | UI の部品 | Material UI 7 | Material UI 9.5.0（2026-11-15 に確定。最新） | **先生にそろえる**。Tailwind CSS は、使わない（Material UI と役割が重なり、設定の衝突が起きやすいため） |
 | React | 19.2.x | 19.3.1 | TaskManagement のまま |
 | TypeScript | 5.9.x | 7.0.2 | TaskManagement のまま |
-| Vite | 7.3.x | 8.3.4 | TaskManagement のまま |
+| Vite | 7.3.x | 8.3.8 | TaskManagement のまま |
 | Spring Boot | 4.0.3 | 4.1.1 | TaskManagement のまま |
 | Gradle | 9.3.1 | 9.8.1 | TaskManagement のまま |
 | PostgreSQL | 17 | 18 | TaskManagement のまま |
