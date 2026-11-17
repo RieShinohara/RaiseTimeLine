@@ -243,18 +243,18 @@ test('編集・削除のボタンは、自分の投稿だけに出る（ログ�
   fetchMock.mockResolvedValueOnce(jsonResponse(200, page([mine(2, '自分の投稿'), post(1, '他の人の投稿')])))
   renderApp('/')
   expect(await screen.findByText('自分の投稿')).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: '編集' })).not.toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: '削除' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /を編集$/ })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /を削除$/ })).not.toBeInTheDocument()
 })
 
 test('ログイン中は、自分の投稿にだけ、編集と削除のボタンが出る', async () => {
   loginAndLoad([mine(2, '自分の投稿'), post(1, '他の人の投稿')])
   expect(await screen.findByText('他の人の投稿')).toBeInTheDocument()
   const articles = screen.getAllByRole('article')
-  expect(within(articles[0]).getByRole('button', { name: '編集' })).toBeInTheDocument()
-  expect(within(articles[0]).getByRole('button', { name: '削除' })).toBeInTheDocument()
-  expect(within(articles[1]).queryByRole('button', { name: '編集' })).not.toBeInTheDocument()
-  expect(within(articles[1]).queryByRole('button', { name: '削除' })).not.toBeInTheDocument()
+  expect(within(articles[0]).getByRole('button', { name: /を編集$/ })).toBeInTheDocument()
+  expect(within(articles[0]).getByRole('button', { name: /を削除$/ })).toBeInTheDocument()
+  expect(within(articles[1]).queryByRole('button', { name: /を編集$/ })).not.toBeInTheDocument()
+  expect(within(articles[1]).queryByRole('button', { name: /を削除$/ })).not.toBeInTheDocument()
 })
 
 test('編集：今の本文が入ったモーダルで直して保存すると、同じ場所で置き換わり「編集済み」になる', async () => {
@@ -263,7 +263,7 @@ test('編集：今の本文が入ったモーダルで直して保存すると�
   await screen.findByText('直す前の本文')
   fetchMock.mockResolvedValueOnce(jsonResponse(200, mine(2, '直したあとの本文', { updatedAt: '2026-11-16T07:00:00Z' })))
 
-  await user.click(within(screen.getAllByRole('article')[0]).getByRole('button', { name: '編集' }))
+  await user.click(within(screen.getAllByRole('article')[0]).getByRole('button', { name: /を編集$/ }))
   const dialog = await screen.findByRole('dialog')
   const input = within(dialog).getByRole('textbox')
   expect(input).toHaveValue('直す前の本文')
@@ -294,7 +294,7 @@ test('編集に失敗したら、モーダルを閉じず、入力を残して�
   await screen.findByText('元の本文')
   fetchMock.mockResolvedValueOnce(jsonResponse(404, { message: '投稿が見つかりません' }))
 
-  await user.click(screen.getByRole('button', { name: '編集' }))
+  await user.click(screen.getByRole('button', { name: /を編集$/ }))
   const dialog = await screen.findByRole('dialog')
   await user.type(within(dialog).getByRole('textbox'), 'つづき')
   await user.click(within(dialog).getByRole('button', { name: '保存' }))
@@ -310,7 +310,7 @@ test('削除：確認のダイアログで「キャンセル」なら、何も�
   loginAndLoad([mine(2, '消さない投稿')])
   await screen.findByText('消さない投稿')
 
-  await user.click(screen.getByRole('button', { name: '削除' }))
+  await user.click(screen.getByRole('button', { name: /を削除$/ }))
   const dialog = await screen.findByRole('dialog')
   expect(within(dialog).getByText('この投稿を削除しますか？')).toBeInTheDocument()
   expect(within(dialog).getByText('削除した投稿は元に戻せません。')).toBeInTheDocument()
@@ -327,7 +327,7 @@ test('削除：「削除する」を押すと、サーバーに送り、一覧�
   await screen.findByText('消す投稿')
   fetchMock.mockResolvedValueOnce(jsonResponse(204))
 
-  await user.click(within(screen.getAllByRole('article')[0]).getByRole('button', { name: '削除' }))
+  await user.click(within(screen.getAllByRole('article')[0]).getByRole('button', { name: /を削除$/ }))
   await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: '削除する' }))
 
   await waitFor(() => expect(screen.queryByText('消す投稿')).not.toBeInTheDocument())
@@ -346,7 +346,7 @@ test('削除に失敗したら、ダイアログを閉じず、理由を出す�
   await screen.findByText('消えない投稿')
   fetchMock.mockResolvedValueOnce(jsonResponse(403, { message: '他の人の投稿は、編集・削除できません' }))
 
-  await user.click(screen.getByRole('button', { name: '削除' }))
+  await user.click(screen.getByRole('button', { name: /を削除$/ }))
   const dialog = await screen.findByRole('dialog')
   await user.click(within(dialog).getByRole('button', { name: '削除する' }))
 

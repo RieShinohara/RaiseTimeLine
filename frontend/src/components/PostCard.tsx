@@ -16,9 +16,17 @@ interface Props {
   onDelete?: (post: Post) => void
 }
 
+// ボタンの名前に入れる、本文の頭（読み上げで、どの投稿のボタンか分かるように）
+function excerpt(body: string, max = 20): string {
+  const chars = Array.from(body.replace(/\s+/g, ' '))
+  return chars.length > max ? `${chars.slice(0, max).join('')}…` : chars.join('')
+}
+
 // 投稿 1 件のカード。いいね数・コメント数は、あとの機能で足す
 export default function PostCard({ post, onEdit, onDelete }: Props) {
   const { author } = post
+  // 例：「サンプルの投稿「こんにちは…」を編集」。どの投稿のボタンかが、名前だけで分かる（F7）
+  const target = `${author.displayName}の投稿「${excerpt(post.body)}」`
   return (
     <Card component="article" variant="outlined">
       <CardContent sx={{ display: 'flex', gap: 1.5 }}>
@@ -43,12 +51,12 @@ export default function PostCard({ post, onEdit, onDelete }: Props) {
               {post.updatedAt ? '編集済み' : ''}
             </Typography>
             {onEdit && (
-              <IconButton size="small" aria-label="編集" onClick={() => onEdit(post)}>
+              <IconButton size="small" aria-label={`${target}を編集`} onClick={() => onEdit(post)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
             )}
             {onDelete && (
-              <IconButton size="small" aria-label="削除" onClick={() => onDelete(post)}>
+              <IconButton size="small" aria-label={`${target}を削除`} onClick={() => onDelete(post)}>
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
             )}

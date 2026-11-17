@@ -37,11 +37,26 @@ export function getRefreshToken(): string | null {
   return read(REFRESH_TOKEN)
 }
 
+// 保存してあった値が、ユーザー情報の形か確かめる（手で書き換えた・古い版の形、などのとき、想定外の値で動かないため）
+function isAuthUser(value: unknown): value is AuthUser {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+  return (
+    typeof v.id === 'number' &&
+    Number.isFinite(v.id) &&
+    typeof v.email === 'string' &&
+    typeof v.username === 'string' &&
+    typeof v.displayName === 'string'
+  )
+}
+
+// 形が違うとき（壊れた JSON を含む）は null＝ログインしていない状態として扱う
 export function getUser(): AuthUser | null {
   const raw = read(USER_INFO)
   if (!raw) return null
   try {
-    return JSON.parse(raw) as AuthUser
+    const parsed: unknown = JSON.parse(raw)
+    return isAuthUser(parsed) ? parsed : null
   } catch {
     return null
   }
