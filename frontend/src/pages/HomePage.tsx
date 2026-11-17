@@ -43,7 +43,9 @@ export default function HomePage() {
         <Tab label="全体" />
       </Tabs>
       {/* 固定のボタン。下へ読み進めても、いつでも押せる（ログイン中だけ）。
-          狭い画面（スマホ）は右下。広い画面（PC）は、一覧の右の空白の上のほう（一覧の見える幅は 552px。右端から 12px 離す） */}
+          横の位置は、どの幅でも、一覧の右端から 12px 離す（一覧の見える幅は 552px）。ただし、一覧が画面いっぱいの狭さでは、
+          ボタンが画面の外に出ないよう、右端から 16px で止める（ボタンの幅は約 120px）。
+          縦の位置は、広い画面（PC）は上のほう（ヘッダーの下）、狭い画面（スマホ）は右下 */}
       {user && (
         <Fab
           variant="extended"
@@ -51,11 +53,11 @@ export default function HomePage() {
           onClick={() => setComposing(true)}
           sx={{
             position: 'fixed',
-            // 狭い画面（スマホ）：右下
+            left: 'min(calc(50% + 288px), calc(100% - 136px))',
+            // 狭い画面（スマホ）：下
             bottom: 24,
-            right: 16,
-            // 広い画面（PC）：一覧（中央。見える幅 552px）の右の空白の、ヘッダーの下。一覧とは重ならない
-            '@media (min-width: 960px)': { top: 80, bottom: 'auto', right: 'auto', left: 'calc(50% + 288px)' },
+            // 広い画面（PC）：上のほう（ヘッダーの下）
+            '@media (min-width: 960px)': { top: 80, bottom: 'auto' },
           }}
         >
           <AddIcon sx={{ mr: 1 }} />
