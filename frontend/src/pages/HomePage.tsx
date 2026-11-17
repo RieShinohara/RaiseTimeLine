@@ -42,14 +42,21 @@ export default function HomePage() {
       <Tabs value={0} sx={{ mb: 2 }}>
         <Tab label="全体" />
       </Tabs>
-      {/* 画面の右下に固定。下へ読み進めても、いつでも押せる（ログイン中だけ）。
-          画面が広いときは、一覧の右端の内側に寄せる（一覧の幅は 600px。左右の余白は 24px） */}
+      {/* 固定のボタン。下へ読み進めても、いつでも押せる（ログイン中だけ）。
+          狭い画面（スマホ）は右下。広い画面（PC）は、一覧の右の空白の上のほう（一覧の見える幅は 552px。右端から 12px 離す） */}
       {user && (
         <Fab
           variant="extended"
           color="primary"
           onClick={() => setComposing(true)}
-          sx={{ position: 'fixed', bottom: 24, right: 'max(16px, calc(50% - 276px))' }}
+          sx={{
+            position: 'fixed',
+            // 狭い画面（スマホ）：右下
+            bottom: 24,
+            right: 16,
+            // 広い画面（PC）：一覧（中央。見える幅 552px）の右の空白の、ヘッダーの下。一覧とは重ならない
+            '@media (min-width: 960px)': { top: 80, bottom: 'auto', right: 'auto', left: 'calc(50% + 288px)' },
+          }}
         >
           <AddIcon sx={{ mr: 1 }} />
           投稿する
