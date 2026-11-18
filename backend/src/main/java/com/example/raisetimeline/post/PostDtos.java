@@ -31,14 +31,15 @@ public final class PostDtos {
 	}
 
 	// updatedAt が空でなければ、「編集済み」（POST-1）。
-	// likeCount：いいねの数。likedByMe：ログイン中の自分が押したか（ログインなしは、常に false）
+	// likeCount：いいねの数。likedByMe：ログイン中の自分が押したか（ログインなしは、常に false）。
+	// commentCount：コメントの数（返信を含む合計）
 	public record PostResponse(Long id, String body, Instant createdAt, Instant updatedAt, AuthorResponse author,
-			long likeCount, boolean likedByMe) {
+			long likeCount, boolean likedByMe, long commentCount) {
 
-		static PostResponse from(Post post, long likeCount, boolean likedByMe) {
+		static PostResponse from(Post post, long likeCount, boolean likedByMe, long commentCount) {
 			return new PostResponse(post.getId(), post.getBody(), post.getCreatedAt(), post.getUpdatedAt(),
 					new AuthorResponse(post.getUserId(), post.getUsername(), post.getDisplayName()),
-					likeCount, likedByMe);
+					likeCount, likedByMe, commentCount);
 		}
 
 	}

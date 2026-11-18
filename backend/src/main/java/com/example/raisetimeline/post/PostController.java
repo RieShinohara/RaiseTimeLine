@@ -45,6 +45,12 @@ public class PostController {
 		return postService.newCount(after, userId);
 	}
 
+	// 投稿 1 件（詳細画面用）。ログインなしで見られる
+	@GetMapping("/{id}")
+	public PostResponse get(@PathVariable Long id, @AuthenticationPrincipal Long userId) {
+		return postService.get(id, userId);
+	}
+
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public PostResponse create(@Valid @RequestBody PostRequest request, @AuthenticationPrincipal Long userId) {

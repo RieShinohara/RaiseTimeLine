@@ -103,17 +103,18 @@ class PostSqlCountTests {
 	}
 
 	@Test
-	void ログイン中の一覧のSQLは_件数によらず3回() throws Exception {
-		// 投稿 1 回 ＋ 数をまとめて 1 回 ＋ 押したかをまとめて 1 回。20 件でも 5 件でも、同じ（N+1 になっていない）
-		assertThat(selectsForList(20, viewerToken)).isEqualTo(3);
-		assertThat(selectsForList(5, viewerToken)).isEqualTo(3);
+	void ログイン中の一覧のSQLは_件数によらず4回() throws Exception {
+		// 投稿 1 回 ＋ いいね数 1 回 ＋ 押したか 1 回 ＋ コメント数 1 回（すべてまとめて）。
+		// 20 件でも 5 件でも、同じ（N+1 になっていない）
+		assertThat(selectsForList(20, viewerToken)).isEqualTo(4);
+		assertThat(selectsForList(5, viewerToken)).isEqualTo(4);
 	}
 
 	@Test
-	void ログインなしの一覧のSQLは_件数によらず2回() throws Exception {
+	void ログインなしの一覧のSQLは_件数によらず3回() throws Exception {
 		// 「押したか」は、ログインなしなら聞かない（常に false）
-		assertThat(selectsForList(20, null)).isEqualTo(2);
-		assertThat(selectsForList(5, null)).isEqualTo(2);
+		assertThat(selectsForList(20, null)).isEqualTo(3);
+		assertThat(selectsForList(5, null)).isEqualTo(3);
 	}
 
 	@Test
