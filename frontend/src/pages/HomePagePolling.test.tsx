@@ -21,6 +21,7 @@ function post(id: number, body: string, createdAt = TOP_CREATED_AT, authorId = 2
     updatedAt: null,
     author: { id: authorId, username: 'sample_user', displayName: 'サンプル' },
     likeCount: 0,
+    commentCount: 0,
     likedByMe: false,
   }
 }

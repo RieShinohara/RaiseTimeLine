@@ -19,6 +19,8 @@ export interface Post {
   // いいねの数と、ログイン中の自分が押したか（ログインなしは、常に false）
   likeCount: number
   likedByMe: boolean
+  // コメントの数（返信を含む合計）
+  commentCount: number
 }
 
 export interface PostPage {
