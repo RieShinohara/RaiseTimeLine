@@ -4,11 +4,13 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Fab from '@mui/material/Fab'
+import Snackbar from '@mui/material/Snackbar'
 import Stack from '@mui/material/Stack'
 import Tab from '@mui/material/Tab'
 import Tabs from '@mui/material/Tabs'
 import Typography from '@mui/material/Typography'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { Post } from '../api/posts'
 import DeletePostDialog from '../components/DeletePostDialog'
 import NewPostsBanner from '../components/NewPostsBanner'
@@ -16,14 +18,17 @@ import PostCard from '../components/PostCard'
 import PostComposerDialog from '../components/PostComposerDialog'
 import { useAuth } from '../auth/useAuth'
 import { useInfiniteScroll } from '../timeline/useInfiniteScroll'
+import { useLikeToggle } from '../timeline/useLikeToggle'
 import { useNewPostsCount } from '../timeline/useNewPostsCount'
 import { useTimeline } from '../timeline/useTimeline'
 
 // トップ画面：タイムライン（全体）。ログインなしで見られる。「フォロー中」は、フォローの機能のときに足す
 export default function HomePage() {
   const { user } = useAuth()
-  const { posts, hasNext, loading, error, syncedId, loadMore, reload, prepend, replace, remove } = useTimeline()
+  const { posts, hasNext, loading, error, syncedId, loadMore, reload, prepend, replace, remove, patch } = useTimeline()
   const newCount = useNewPostsCount(syncedId)
+  const navigate = useNavigate()
+  const likes = useLikeToggle(patch)
   const [composing, setComposing] = useState(false)
   // 編集中の投稿・削除の確認中の投稿（なければ null）
   const [editing, setEditing] = useState<Post | null>(null)
@@ -72,9 +77,14 @@ export default function HomePage() {
           return (
             <PostCard
               key={post.id}
-              post={post}
+              // ログアウトしたあとは、「押した状態」を出さない（読み込んだときの、前の人の状態が、残らないように）
+              // ログアウトしたあとは、「押した状態」を出さない（読み込んだときの、前の人の状態が、残らないように）
+              post={user ? post : { ...post, likedByMe: false }}
               onEdit={mine ? setEditing : undefined}
               onDelete={mine ? setDeleting : undefined}
+              // ログインなしで押されたら、ログインの画面へ案内する（いいねは、ログインが要る）
+              onToggleLike={user ? (p) => void likes.toggle(p) : () => void navigate('/login')}
+              likePending={likes.pendingIds.has(post.id)}
             />
           )
         })}
@@ -117,6 +127,12 @@ export default function HomePage() {
         <PostComposerDialog key={editing.id} open editing={editing} onClose={() => setEditing(null)} onDone={replace} />
       )}
       <DeletePostDialog post={deleting} onClose={() => setDeleting(null)} onDeleted={(post) => remove(post.id)} />
+      {/* いいねに失敗したとき（数と見た目は、元のまま）。数秒で消える */}
+      <Snackbar open={likes.error !== null} autoHideDuration={5000} onClose={likes.clearError}>
+        <Alert severity="error" onClose={likes.clearError} sx={{ width: '100%' }}>
+          {likes.error}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

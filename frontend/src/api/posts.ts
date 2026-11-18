@@ -16,6 +16,9 @@ export interface Post {
   // 編集していなければ null（入っていれば「編集済み」）
   updatedAt: string | null
   author: PostAuthor
+  // いいねの数と、ログイン中の自分が押したか（ログインなしは、常に false）
+  likeCount: number
+  likedByMe: boolean
 }
 
 export interface PostPage {
@@ -26,12 +29,14 @@ export interface PostPage {
 export const PAGE_SIZE = 20
 
 // タイムラインを読む。before（投稿 id）を渡すと、それより古い投稿を読む（省略すると最新から）。
-// ログインなしで見られるので、札は付けない
+// ログインなしでも見られる。ログイン中は、札を付けて送る（「自分が押したか」が、自分の分として返る）
 export async function fetchPosts(before?: number, size: number = PAGE_SIZE): Promise<PostPage> {
   const query = before === undefined ? `size=${size}` : `before=${before}&size=${size}`
+  // 札の期限が切れていると、サーバーは「ログインなし」として扱い、押した状態が、すべて false になる。先に更新しておく
+  await refreshIfExpired()
   let res: Response
   try {
-    res = await fetch(`/api/posts?${query}`)
+    res = await apiFetch(`/api/posts?${query}`)
   } catch {
     throw new ApiError(0, NETWORK_ERROR_MESSAGE)
   }
@@ -87,4 +92,22 @@ export async function updatePost(id: number, body: string): Promise<Post> {
 // 自分の投稿を消す（本人だけ。元に戻せない）
 export async function deletePost(id: number): Promise<void> {
   await callWithLogin(`/api/posts/${id}`, { method: 'DELETE' })
+}
+
+// いいねを押した・取り消したあとの、その投稿の数と、自分が押した状態
+export interface LikeState {
+  likeCount: number
+  liked: boolean
+}
+
+// いいねを押す（何回押しても、結果は同じ）。ログインが要る
+export async function likePost(id: number): Promise<LikeState> {
+  const res = await callWithLogin(`/api/posts/${id}/like`, { method: 'PUT' })
+  return (await res.json()) as LikeState
+}
+
+// いいねを取り消す（押していなくても、結果は同じ）。ログインが要る
+export async function unlikePost(id: number): Promise<LikeState> {
+  const res = await callWithLogin(`/api/posts/${id}/like`, { method: 'DELETE' })
+  return (await res.json()) as LikeState
 }

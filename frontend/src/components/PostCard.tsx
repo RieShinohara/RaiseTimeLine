@@ -1,5 +1,7 @@
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
@@ -14,6 +16,10 @@ interface Props {
   // 自分の投稿のときだけ、編集・削除のボタンを出す（本当の確認は、サーバーが行う）
   onEdit?: (post: Post) => void
   onDelete?: (post: Post) => void
+  // いいねのボタン。渡されたときだけ出す。ログインなしで押されたときの案内は、呼ぶ側が決める。
+  // likePending：送信中（返事が来るまで、押せない）
+  onToggleLike?: (post: Post) => void
+  likePending?: boolean
 }
 
 // ボタンの名前に入れる、本文の頭（読み上げで、どの投稿のボタンか分かるように）
@@ -22,8 +28,8 @@ function excerpt(body: string, max = 20): string {
   return chars.length > max ? `${chars.slice(0, max).join('')}…` : chars.join('')
 }
 
-// 投稿 1 件のカード。いいね数・コメント数は、あとの機能で足す
-export default function PostCard({ post, onEdit, onDelete }: Props) {
+// 投稿 1 件のカード。コメント数は、あとの機能で足す
+export default function PostCard({ post, onEdit, onDelete, onToggleLike, likePending = false }: Props) {
   const { author } = post
   // 例：「サンプルの投稿「こんにちは…」を編集」。どの投稿のボタンかが、名前だけで分かる（F7）
   const target = `${author.displayName}の投稿「${excerpt(post.body)}」`
@@ -47,6 +53,24 @@ export default function PostCard({ post, onEdit, onDelete }: Props) {
           {/* 本文は、文字として表示する（HTML として解釈しない）。改行は、そのまま見せる */}
           <Typography sx={{ mt: 0.5, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{post.body}</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 28 }}>
+            {onToggleLike && (
+              <>
+                {/* 押した状態は、ハートの形（塗りつぶし）と色で示し、aria-pressed でも伝える。名前は、どの投稿かが分かるように */}
+                <IconButton
+                  size="small"
+                  color={post.likedByMe ? 'error' : 'default'}
+                  aria-label={post.likedByMe ? `${target}のいいねを取り消す` : `${target}にいいねする`}
+                  aria-pressed={post.likedByMe}
+                  disabled={likePending}
+                  onClick={() => onToggleLike(post)}
+                >
+                  {post.likedByMe ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+                </IconButton>
+                <Typography variant="body2" color="text.secondary" sx={{ mr: 1.5, minWidth: '1.5em' }}>
+                  {post.likeCount}
+                </Typography>
+              </>
+            )}
             <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1 }}>
               {post.updatedAt ? '編集済み' : ''}
             </Typography>
