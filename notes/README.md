@@ -16,4 +16,4 @@ AIエンジニア養成コースの学習記録です。Claude Code と一緒に
 | [09-review-c.md](09-review-c.md) | 復習 C：id・user_id・SQL の基本（表の見方）、`#{}` と SQL インジェクション、N+1（1 + N）の入口、更新の「隙間」（B8） |
 | [10-review-d.md](10-review-d.md) | 復習 D：品質チェックの道具の役割（Checkstyle・SpotBugs・oxlint・Prettier・tsc・テスト・ArchUnit・CI）、3 枚の網、curl の読み方、401 と 403 |
 | [11-likes-api-n-plus-one.md](11-likes-api-n-plus-one.md) | いいねの API と N+1 問題：「41 回」を「3 回」にする、GROUP BY と IN、SQL の回数をテストで数える、二重のいいねを防ぐ（主キーの組み合わせ） |
-| [12-review-b.md](12-review-b.md) | 復習 B：パスワードのハッシュ（BCrypt・塩）、ログイン失敗の文言（ユーザー列挙の防止）、CORS は「利用者を守る」ブラウザの決まり、Cookie と CSRF |
+| [12-review-b.md](12-review-b.md) | 復習 B：パスワードのハッシュ（BCrypt・塩）、ログイン失敗の文言（ユーザー列挙の防止）、CORS は「利用者を守る」ブラウザの決まり、Cookie と CSRF、curl は誰でも使える普通の道具、XSS と React の書き方、攻撃の種類と守る場所の表 |
