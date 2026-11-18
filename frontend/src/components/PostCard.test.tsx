@@ -14,9 +14,20 @@ function post(id: number, body: string, extra: Partial<Post> = {}): Post {
     author: { id: 1, username: 'sample_user', displayName: 'サンプル' },
     likeCount: 0,
     likedByMe: false,
+    commentCount: 0,
     ...extra,
   }
 }
+
+test('コメント数が見え、読み上げでは、どの投稿の何件かが分かる', () => {
+  render(<PostCard post={post(1, 'こんにちは', { commentCount: 3 })} />)
+  expect(screen.getByRole('img', { name: 'サンプルの投稿「こんにちは」のコメント 3 件' })).toHaveTextContent('3')
+})
+
+test('コメントがないときは、0 と表示する', () => {
+  render(<PostCard post={post(1, 'こんにちは')} />)
+  expect(screen.getByRole('img', { name: 'サンプルの投稿「こんにちは」のコメント 0 件' })).toHaveTextContent('0')
+})
 
 test('編集・削除ボタンの名前に、どの投稿かが分かる情報（投稿者と本文の頭）が入る', () => {
   render(<PostCard post={post(1, 'こんにちは')} onEdit={vi.fn()} onDelete={vi.fn()} />)

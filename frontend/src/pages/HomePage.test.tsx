@@ -16,6 +16,7 @@ function post(id: number, body: string, extra: Partial<Post> = {}): Post {
     updatedAt: null,
     author: { id: 2, username: 'sample_user', displayName: 'サンプル' },
     likeCount: 0,
+    commentCount: 0,
     likedByMe: false,
     ...extra,
   }

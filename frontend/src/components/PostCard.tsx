@@ -1,3 +1,4 @@
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import FavoriteIcon from '@mui/icons-material/Favorite'
@@ -28,7 +29,7 @@ function excerpt(body: string, max = 20): string {
   return chars.length > max ? `${chars.slice(0, max).join('')}…` : chars.join('')
 }
 
-// 投稿 1 件のカード。コメント数は、あとの機能で足す
+// 投稿 1 件のカード
 export default function PostCard({ post, onEdit, onDelete, onToggleLike, likePending = false }: Props) {
   const { author } = post
   // 例：「サンプルの投稿「こんにちは…」を編集」。どの投稿のボタンかが、名前だけで分かる（F7）
@@ -71,7 +72,19 @@ export default function PostCard({ post, onEdit, onDelete, onToggleLike, likePen
                 </Typography>
               </>
             )}
-            <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1 }}>
+            {/* コメント数（返信を含む）。表示だけ。詳細画面へのリンクにするのは、詳細画面ができたとき。
+                アイコンと数を 1 つにまとめて、「…のコメント 3 件」と読み上げる */}
+            <Box
+              role="img"
+              aria-label={`${target}のコメント ${post.commentCount} 件`}
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}
+            >
+              <ChatBubbleOutlineIcon fontSize="small" />
+              <Typography variant="body2" aria-hidden>
+                {post.commentCount}
+              </Typography>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1, ml: 1.5 }}>
               {post.updatedAt ? '編集済み' : ''}
             </Typography>
             {onEdit && (
