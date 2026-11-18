@@ -65,6 +65,20 @@
 - 削除された投稿・コメントに、コメント・返信しようとした：「見つかりません」と表示する（【補足】）
 - 返信の返信を、画面を通さずに直接要求した：サーバーが拒否するか、1 段に直す（実装で決める）
 
+## 6a. API（実装。2026-11-18。Issue #119）
+**Claude Code が補った点**（ユーザーの確認待ち）：①詳細画面用に `GET /api/posts/{id}` を足す ②コメント一覧は、ページ分けしない（1 回で全部返す。件数が少ない前提） ③返信先が別の投稿のコメント・存在しないコメントなら 400 ④返信の返信は、元のコメントの返信に直して保存する（1 段のまま。CMT-1a）。
+
+| Method | Path | 説明 |
+|---|---|---|
+| GET | `/api/posts/{id}` | 投稿 1 件（`likeCount`・`likedByMe`・`commentCount` つき）。ログインなしで可。存在しなければ 404 |
+| GET | `/api/posts/{postId}/comments` | コメントを古い順に、各コメントの `replies` に返信を古い順で入れて返す。ログインなしで可。SQL は 1 回。存在しない投稿は 404 |
+| POST | `/api/posts/{postId}/comments` | 入力 `{ body, parentCommentId? }`。**ログインが必要**（401）。自分の投稿にも可。空・281 文字以上は 400。作ったコメントを 201 で返す |
+| DELETE | `/api/comments/{id}` | 書いた人か、その投稿をした人だけ（それ以外は 403）。返信も一緒に消える（DB の `ON DELETE CASCADE`）。存在しなければ 404。成功は 204 |
+| GET | `/api/posts` | 各投稿に `commentCount`（返信を含む合計）が付く。20 件ぶんをまとめて数える（[04](04-timeline.md) 5） |
+
+- 応答（一覧）：`{ comments: [{ id, body, createdAt, author, replies: [...] }], commentCount }`。`commentCount` は返信を含む
+- 表：Flyway V5 の `comments`（[データ設計](../database-design.md) 2.3）
+
 ## 7. 未決の点
 なし（CMT-1〜6 は、2026-11-13 に決定。上の「2. 決まっていること」）。
 

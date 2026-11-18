@@ -35,6 +35,8 @@ public class SecurityConfig {
 						.requestMatchers("/api/auth/**").permitAll()
 						// タイムラインと新着の件数は、ログインなしで見られる（TL-3）。投稿・編集・削除は、ログインが要る
 						.requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/new-count").permitAll()
+						// 投稿 1 件とコメント一覧も、ログインなしで見られる。書く・消すは、ログインが要る
+						.requestMatchers(HttpMethod.GET, "/api/posts/{id}", "/api/posts/{id}/comments").permitAll()
 						.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
 						// Spring がエラーを返すときの内部の転送先。ここを閉じると、400 や 404 が 401 に化ける
 						.requestMatchers("/error").permitAll()

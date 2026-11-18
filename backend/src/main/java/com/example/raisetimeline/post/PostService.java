@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.example.raisetimeline.auth.ApiException;
+import com.example.raisetimeline.comment.CommentMapper;
+import com.example.raisetimeline.comment.CommentMapper.CommentCount;
 import com.example.raisetimeline.post.PostDtos.NewCountResponse;
 import com.example.raisetimeline.post.PostDtos.PostPageResponse;
 import com.example.raisetimeline.post.PostDtos.PostResponse;
@@ -22,10 +24,12 @@ public class PostService {
 
 	private final PostMapper postMapper;
 	private final PostLikeMapper postLikeMapper;
+	private final CommentMapper commentMapper;
 
-	public PostService(PostMapper postMapper, PostLikeMapper postLikeMapper) {
+	public PostService(PostMapper postMapper, PostLikeMapper postLikeMapper, CommentMapper commentMapper) {
 		this.postMapper = postMapper;
 		this.postLikeMapper = postLikeMapper;
+		this.commentMapper = commentMapper;
 	}
 
 	// before：この id より古い投稿を返す（空なら最新から）。size：1〜50
@@ -46,18 +50,30 @@ public class PostService {
 						.collect(Collectors.toMap(LikeCount::postId, LikeCount::likeCount));
 		Set<Long> likedByMe = userId == null || ids.isEmpty() ? Set.of()
 				: new HashSet<>(postLikeMapper.findLikedPostIds(userId, ids));
+		Map<Long, Long> commentCounts = ids.isEmpty() ? Map.of()
+				: commentMapper.countByPostIds(ids).stream()
+						.collect(Collectors.toMap(CommentCount::postId, CommentCount::commentCount));
 		List<PostResponse> posts = page.stream()
-				// いいねが 0 件の投稿は、まとめて数えた結果に出てこないので、0 にする
+				// いいね・コメントが 0 件の投稿は、まとめて数えた結果に出てこないので、0 にする
 				.map(post -> PostResponse.from(post, likeCounts.getOrDefault(post.getId(), 0L),
-						likedByMe.contains(post.getId())))
+						likedByMe.contains(post.getId()), commentCounts.getOrDefault(post.getId(), 0L)))
 				.toList();
 		return new PostPageResponse(posts, hasNext);
+	}
+
+	// 投稿 1 件（詳細画面用）。ログインなしでも見られる
+	public PostResponse get(Long id, Long userId) {
+		Post post = postMapper.findById(id);
+		if (post == null) {
+			throw notFound();
+		}
+		return toResponse(post, userId);
 	}
 
 	private PostResponse toResponse(Post post, Long userId) {
 		long likeCount = postLikeMapper.countByPostId(post.getId());
 		boolean likedByMe = userId != null && postLikeMapper.exists(post.getId(), userId);
-		return PostResponse.from(post, likeCount, likedByMe);
+		return PostResponse.from(post, likeCount, likedByMe, commentMapper.countByPostId(post.getId()));
 	}
 
 	// after より新しい（id が大きい）投稿の件数。ログイン中なら、自分の投稿は数えない
@@ -77,8 +93,8 @@ public class PostService {
 		post.setUserId(userId);
 		post.setBody(body);
 		postMapper.insert(post);
-		// できたばかりなので、いいねは 0 件
-		return PostResponse.from(postMapper.findById(post.getId()), 0, false);
+		// できたばかりなので、いいね・コメントは 0 件
+		return PostResponse.from(postMapper.findById(post.getId()), 0, false, 0);
 	}
 
 	public PostResponse update(Long userId, Long id, String body) {

@@ -18,3 +18,4 @@ AIエンジニア養成コースの学習記録です。Claude Code と一緒に
 | [11-likes-api-n-plus-one.md](11-likes-api-n-plus-one.md) | いいねの API と N+1 問題：「41 回」を「3 回」にする、GROUP BY と IN、SQL の回数をテストで数える、二重のいいねを防ぐ（主キーの組み合わせ） |
 | [12-review-b.md](12-review-b.md) | 復習 B：パスワードのハッシュ（BCrypt・塩）、ログイン失敗の文言（ユーザー列挙の防止）、CORS は「利用者を守る」ブラウザの決まり、Cookie と CSRF、curl は誰でも使える普通の道具、XSS と React の書き方、攻撃の種類と守る場所の表 |
 | [13-likes-frontend.md](13-likes-frontend.md) | いいねの画面：結果を待ってから変える、一覧を読むときにも札が要る、二重に送らない（useRef の印）、押した状態を色だけで伝えない、テストの想定のずれ |
+| [14-comments-api.md](14-comments-api.md) | コメントの API：自分の表を指す（返信）、`ON DELETE CASCADE` で連鎖して消す、入れ子は 1 回の SQL、削除の権限（401・403・404）、N+1 の予想と結果 |
