@@ -30,12 +30,15 @@ public final class PostDtos {
 	public record AuthorResponse(Long id, String username, String displayName) {
 	}
 
-	// updatedAt が空でなければ、「編集済み」（POST-1）
-	public record PostResponse(Long id, String body, Instant createdAt, Instant updatedAt, AuthorResponse author) {
+	// updatedAt が空でなければ、「編集済み」（POST-1）。
+	// likeCount：いいねの数。likedByMe：ログイン中の自分が押したか（ログインなしは、常に false）
+	public record PostResponse(Long id, String body, Instant createdAt, Instant updatedAt, AuthorResponse author,
+			long likeCount, boolean likedByMe) {
 
-		static PostResponse from(Post post) {
+		static PostResponse from(Post post, long likeCount, boolean likedByMe) {
 			return new PostResponse(post.getId(), post.getBody(), post.getCreatedAt(), post.getUpdatedAt(),
-					new AuthorResponse(post.getUserId(), post.getUsername(), post.getDisplayName()));
+					new AuthorResponse(post.getUserId(), post.getUsername(), post.getDisplayName()),
+					likeCount, likedByMe);
 		}
 
 	}

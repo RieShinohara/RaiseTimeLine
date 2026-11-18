@@ -16,21 +16,31 @@ public class PostService {
 	static final int MAX_SIZE = 50;
 
 	private final PostMapper postMapper;
+	private final PostLikeMapper postLikeMapper;
 
-	public PostService(PostMapper postMapper) {
+	public PostService(PostMapper postMapper, PostLikeMapper postLikeMapper) {
 		this.postMapper = postMapper;
+		this.postLikeMapper = postLikeMapper;
 	}
 
 	// before：この id より古い投稿を返す（空なら最新から）。size：1〜50
-	public PostPageResponse list(Long before, int size) {
+	// userId：ログイン中の人（ログインなしは null）。「自分が押したか」の判断に使う
+	public PostPageResponse list(Long before, int size, Long userId) {
 		if (size < 1 || size > MAX_SIZE) {
 			throw new ApiException(HttpStatus.BAD_REQUEST, "size は 1〜" + MAX_SIZE + " で指定してください");
 		}
 		// 1 件多く読んで、続きがあるかを知る
 		List<Post> rows = postMapper.findOlderThan(before, size + 1);
 		boolean hasNext = rows.size() > size;
-		List<PostResponse> posts = rows.stream().limit(size).map(PostResponse::from).toList();
+		// 【わざと素直な作り方】1 件ずつ、数と「押したか」を聞く → SQL が 1 + N + N 回になる（N+1 問題）
+		List<PostResponse> posts = rows.stream().limit(size).map(post -> toResponse(post, userId)).toList();
 		return new PostPageResponse(posts, hasNext);
+	}
+
+	private PostResponse toResponse(Post post, Long userId) {
+		long likeCount = postLikeMapper.countByPostId(post.getId());
+		boolean likedByMe = userId != null && postLikeMapper.exists(post.getId(), userId);
+		return PostResponse.from(post, likeCount, likedByMe);
 	}
 
 	// after より新しい（id が大きい）投稿の件数。ログイン中なら、自分の投稿は数えない
@@ -50,7 +60,8 @@ public class PostService {
 		post.setUserId(userId);
 		post.setBody(body);
 		postMapper.insert(post);
-		return PostResponse.from(postMapper.findById(post.getId()));
+		// できたばかりなので、いいねは 0 件
+		return PostResponse.from(postMapper.findById(post.getId()), 0, false);
 	}
 
 	public PostResponse update(Long userId, Long id, String body) {
@@ -64,7 +75,7 @@ public class PostService {
 		if (updated == null) {
 			throw notFound();
 		}
-		return PostResponse.from(updated);
+		return toResponse(updated, userId);
 	}
 
 	public void delete(Long userId, Long id) {
