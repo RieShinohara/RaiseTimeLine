@@ -85,5 +85,10 @@ export function useTimeline() {
     setPosts((current) => current.filter((p) => p.id !== id))
   }, [])
 
-  return { posts, hasNext, loading, error, syncedId, loadMore, reload, prepend, replace, remove }
+  // 投稿の一部（いいねの数など）だけを、書き換える。ほかの項目は、そのまま
+  const patch = useCallback((id: number, changes: Partial<Post>) => {
+    setPosts((current) => current.map((p) => (p.id === id ? { ...p, ...changes } : p)))
+  }, [])
+
+  return { posts, hasNext, loading, error, syncedId, loadMore, reload, prepend, replace, remove, patch }
 }

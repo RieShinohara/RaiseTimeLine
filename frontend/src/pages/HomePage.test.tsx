@@ -15,6 +15,8 @@ function post(id: number, body: string, extra: Partial<Post> = {}): Post {
     createdAt: '2026-11-16T05:30:00Z',
     updatedAt: null,
     author: { id: 2, username: 'sample_user', displayName: 'サンプル' },
+    likeCount: 0,
+    likedByMe: false,
     ...extra,
   }
 }
@@ -353,4 +355,119 @@ test('削除に失敗したら、ダイアログを閉じず、理由を出す�
   expect(await within(dialog).findByText('他の人の投稿は、編集・削除できません')).toBeInTheDocument()
   expect(screen.getByRole('dialog')).toBeInTheDocument()
   expect(screen.getByText('消えない投稿')).toBeInTheDocument()
+})
+
+// ここから：いいね（⑥-2）。DEMO_USER（id 1）でログインして、他の人（id 2）の投稿にいいねする
+function pressedLikeButton(article: HTMLElement) {
+  return within(article).getByRole('button', { name: /のいいねを取り消す$/ })
+}
+
+test('ログイン中は、一覧を読むときにも札を付ける（「自分が押したか」が、自分の分として返るように）', async () => {
+  loginAndLoad([post(1, '他の人の投稿')])
+  expect(await screen.findByText('他の人の投稿')).toBeInTheDocument()
+  const [url, init] = fetchMock.mock.calls[0]
+  expect(url).toBe('/api/posts?size=20')
+  expect(new Headers(init.headers).get('Authorization')).toBe('Bearer access-1')
+})
+
+test('ログインなしの一覧は、札を付けない。いいねの数は見える', async () => {
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, page([post(1, '他の人の投稿', { likeCount: 5 })])))
+  renderApp('/')
+  const article = (await screen.findByText('他の人の投稿')).closest('article') as HTMLElement
+  expect(within(article).getByText('5')).toBeInTheDocument()
+  const init = fetchMock.mock.calls[0][1]
+  expect(new Headers(init?.headers).get('Authorization')).toBeNull()
+})
+
+test('いいねを押すと、札を付けて PUT で送り、返事を待ってから、数と押した状態が変わる', async () => {
+  const user = userEvent.setup()
+  loginAndLoad([post(1, '他の人の投稿', { likeCount: 2 })])
+  const article = (await screen.findByText('他の人の投稿')).closest('article') as HTMLElement
+
+  // 返事は、あとから返す（返事が来るまでの様子を見る）
+  let reply: (r: Response) => void = () => {}
+  fetchMock.mockReturnValueOnce(new Promise<Response>((resolve) => (reply = resolve)))
+  await user.click(within(article).getByRole('button', { name: /にいいねする$/ }))
+
+  // 返事の前：数は、そのまま。ボタンは、押せない
+  expect(within(article).getByText('2')).toBeInTheDocument()
+  expect(within(article).getByRole('button', { name: /にいいねする$/ })).toBeDisabled()
+
+  reply(jsonResponse(200, { likeCount: 3, liked: true }))
+  await waitFor(() => expect(within(article).getByText('3')).toBeInTheDocument())
+  expect(pressedLikeButton(article)).toHaveAttribute('aria-pressed', 'true')
+  expect(pressedLikeButton(article)).toBeEnabled()
+
+  const [url, init] = fetchMock.mock.calls[1]
+  expect(url).toBe('/api/posts/1/like')
+  expect(init.method).toBe('PUT')
+  expect(new Headers(init.headers).get('Authorization')).toBe('Bearer access-1')
+})
+
+test('押した状態で押すと、DELETE で取り消して、数が減る', async () => {
+  const user = userEvent.setup()
+  loginAndLoad([post(1, '他の人の投稿', { likeCount: 3, likedByMe: true })])
+  const article = (await screen.findByText('他の人の投稿')).closest('article') as HTMLElement
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, { likeCount: 2, liked: false }))
+
+  await user.click(pressedLikeButton(article))
+
+  await waitFor(() => expect(within(article).getByText('2')).toBeInTheDocument())
+  expect(within(article).getByRole('button', { name: /にいいねする$/ })).toHaveAttribute('aria-pressed', 'false')
+  expect(fetchMock.mock.calls[1][1].method).toBe('DELETE')
+})
+
+test('いいねに失敗したら、理由を出し、数と押した状態は、元のまま', async () => {
+  const user = userEvent.setup()
+  loginAndLoad([post(1, '他の人の投稿', { likeCount: 2 })])
+  const article = (await screen.findByText('他の人の投稿')).closest('article') as HTMLElement
+  fetchMock.mockResolvedValueOnce(jsonResponse(404, { message: '投稿が見つかりません' }))
+
+  await user.click(within(article).getByRole('button', { name: /にいいねする$/ }))
+
+  expect(await screen.findByText('うまくいきませんでした（投稿が見つかりません）')).toBeInTheDocument()
+  expect(within(article).getByText('2')).toBeInTheDocument()
+  expect(within(article).getByRole('button', { name: /にいいねする$/ })).toHaveAttribute('aria-pressed', 'false')
+  expect(within(article).getByRole('button', { name: /にいいねする$/ })).toBeEnabled()
+})
+
+test('ログインなしでハートを押すと、いいねは送らず、ログインの画面へ案内する', async () => {
+  const user = userEvent.setup()
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, page([post(1, '他の人の投稿')])))
+  renderApp('/')
+  const article = (await screen.findByText('他の人の投稿')).closest('article') as HTMLElement
+
+  await user.click(within(article).getByRole('button', { name: /にいいねする$/ }))
+
+  // 入力欄の名前には、必須の印（ * ）が付くので、正規表現で探す
+  expect(await screen.findByLabelText(/メールアドレス/)).toBeInTheDocument()
+  // 一覧を読んだ 1 回だけ。いいねの通信は、していない
+  expect(fetchMock).toHaveBeenCalledTimes(1)
+})
+
+test('自分の投稿にも、いいねできる（投稿した本人も、押せる）', async () => {
+  const user = userEvent.setup()
+  loginAndLoad([mine(1, '自分の投稿')])
+  const article = (await screen.findByText('自分の投稿')).closest('article') as HTMLElement
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, { likeCount: 1, liked: true }))
+
+  await user.click(within(article).getByRole('button', { name: /にいいねする$/ }))
+
+  await waitFor(() => expect(pressedLikeButton(article)).toBeInTheDocument())
+})
+
+test('トップ画面を開いたままログインが切れたら、「押した状態」は消える（数は、そのまま見える）', async () => {
+  const user = userEvent.setup()
+  loginAndLoad([post(1, '他の人の投稿', { likeCount: 3, likedByMe: true })])
+  const article = (await screen.findByText('他の人の投稿')).closest('article') as HTMLElement
+  // 取り消しの操作 → 札が期限切れ（401）→ 札の更新も無効（401）→ ログインが切れる
+  fetchMock.mockResolvedValueOnce(jsonResponse(401))
+  fetchMock.mockResolvedValueOnce(jsonResponse(401, { message: 'リフレッシュトークンが無効です' }))
+
+  await user.click(pressedLikeButton(article))
+
+  expect(await screen.findByText(/ログインの期限が切れました/)).toBeInTheDocument()
+  // ログインしていない扱いになるので、前の人の「押した状態」は出さない。数は、そのまま
+  expect(within(article).getByRole('button', { name: /にいいねする$/ })).toHaveAttribute('aria-pressed', 'false')
+  expect(within(article).getByText('3')).toBeInTheDocument()
 })
