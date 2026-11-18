@@ -35,8 +35,8 @@ public class PostController {
 	@GetMapping
 	// before：この投稿 id より古いものを返す（省略なら最新から）
 	public PostPageResponse list(@RequestParam(required = false) Long before,
-			@RequestParam(defaultValue = "20") int size) {
-		return postService.list(before, size);
+			@RequestParam(defaultValue = "20") int size, @AuthenticationPrincipal Long userId) {
+		return postService.list(before, size, userId);
 	}
 
 	// after（投稿 id）より新しい投稿の件数（30 秒ごとの確認用）。投稿が 1 件もないときは、after=0
