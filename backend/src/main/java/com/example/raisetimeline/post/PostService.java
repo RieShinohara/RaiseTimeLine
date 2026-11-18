@@ -1,6 +1,10 @@
 package com.example.raisetimeline.post;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -9,6 +13,7 @@ import com.example.raisetimeline.auth.ApiException;
 import com.example.raisetimeline.post.PostDtos.NewCountResponse;
 import com.example.raisetimeline.post.PostDtos.PostPageResponse;
 import com.example.raisetimeline.post.PostDtos.PostResponse;
+import com.example.raisetimeline.post.PostLikeMapper.LikeCount;
 
 @Service
 public class PostService {
@@ -32,8 +37,20 @@ public class PostService {
 		// 1 件多く読んで、続きがあるかを知る
 		List<Post> rows = postMapper.findOlderThan(before, size + 1);
 		boolean hasNext = rows.size() > size;
-		// 【わざと素直な作り方】1 件ずつ、数と「押したか」を聞く → SQL が 1 + N + N 回になる（N+1 問題）
-		List<PostResponse> posts = rows.stream().limit(size).map(post -> toResponse(post, userId)).toList();
+		List<Post> page = rows.stream().limit(size).toList();
+		// N+1 を避ける：数と「押したか」は、20 件ぶんを、まとめて 1 回ずつ聞く（全部で 1 + 1 + 1 回。
+		// 件数が増えても、回数は変わらない）。1 件ずつ聞くと、1 + N + N 回になる
+		List<Long> ids = page.stream().map(Post::getId).toList();
+		Map<Long, Long> likeCounts = ids.isEmpty() ? Map.of()
+				: postLikeMapper.countByPostIds(ids).stream()
+						.collect(Collectors.toMap(LikeCount::postId, LikeCount::likeCount));
+		Set<Long> likedByMe = userId == null || ids.isEmpty() ? Set.of()
+				: new HashSet<>(postLikeMapper.findLikedPostIds(userId, ids));
+		List<PostResponse> posts = page.stream()
+				// いいねが 0 件の投稿は、まとめて数えた結果に出てこないので、0 にする
+				.map(post -> PostResponse.from(post, likeCounts.getOrDefault(post.getId(), 0L),
+						likedByMe.contains(post.getId())))
+				.toList();
 		return new PostPageResponse(posts, hasNext);
 	}
 

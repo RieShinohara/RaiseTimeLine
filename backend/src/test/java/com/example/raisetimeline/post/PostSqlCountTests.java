@@ -103,19 +103,36 @@ class PostSqlCountTests {
 	}
 
 	@Test
-	void ログイン中の一覧の回数は_素直な作りでは_1足すN足すN() {
-		// 【今の作り（素直な作り）の記録】投稿 1 回 ＋ 数 N 回 ＋ 押したか N 回。次のコミットで、まとめて聞く形に直す
-		assertThat(selectsForListUnchecked(20, viewerToken)).isEqualTo(1 + 20 + 20);
-		assertThat(selectsForListUnchecked(5, viewerToken)).isEqualTo(1 + 5 + 5);
+	void ログイン中の一覧のSQLは_件数によらず3回() throws Exception {
+		// 投稿 1 回 ＋ 数をまとめて 1 回 ＋ 押したかをまとめて 1 回。20 件でも 5 件でも、同じ（N+1 になっていない）
+		assertThat(selectsForList(20, viewerToken)).isEqualTo(3);
+		assertThat(selectsForList(5, viewerToken)).isEqualTo(3);
 	}
 
-	private int selectsForListUnchecked(int size, String token) {
-		try {
-			return selectsForList(size, token);
+	@Test
+	void ログインなしの一覧のSQLは_件数によらず2回() throws Exception {
+		// 「押したか」は、ログインなしなら聞かない（常に false）
+		assertThat(selectsForList(20, null)).isEqualTo(2);
+		assertThat(selectsForList(5, null)).isEqualTo(2);
+	}
+
+	@Test
+	void 一覧のいいね数と押したかが正しい() throws Exception {
+		// 新しい順の先頭 3 件が、いいねを付けた投稿（1 件ずつ）。その次は、いいねなし
+		String loggedIn = mockMvc.perform(get("/api/posts?size=5").header(HttpHeaders.AUTHORIZATION, bearer(viewerToken)))
+				.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		for (int i = 0; i < 3; i++) {
+			assertThat((Integer) JsonPath.read(loggedIn, "$.posts[" + i + "].likeCount")).isEqualTo(1);
+			assertThat((Boolean) JsonPath.read(loggedIn, "$.posts[" + i + "].likedByMe")).isTrue();
 		}
-		catch (Exception e) {
-			throw new IllegalStateException(e);
-		}
+		assertThat((Integer) JsonPath.read(loggedIn, "$.posts[3].likeCount")).isZero();
+		assertThat((Boolean) JsonPath.read(loggedIn, "$.posts[3].likedByMe")).isFalse();
+
+		// ログインなしでも数は見え、「押したか」は常に false
+		String anonymous = mockMvc.perform(get("/api/posts?size=5")).andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+		assertThat((Integer) JsonPath.read(anonymous, "$.posts[0].likeCount")).isEqualTo(1);
+		assertThat((Boolean) JsonPath.read(anonymous, "$.posts[0].likedByMe")).isFalse();
 	}
 
 }
