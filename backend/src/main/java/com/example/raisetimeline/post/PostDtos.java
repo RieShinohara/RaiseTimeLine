@@ -47,4 +47,8 @@ public final class PostDtos {
 	public record NewCountResponse(long count) {
 	}
 
+	// いいねを押した・取り消したあとの、その投稿の数と、自分が押した状態
+	public record LikeResponse(long likeCount, boolean liked) {
+	}
+
 }
