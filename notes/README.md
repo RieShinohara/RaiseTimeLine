@@ -19,3 +19,4 @@ AIエンジニア養成コースの学習記録です。Claude Code と一緒に
 | [12-review-b.md](12-review-b.md) | 復習 B：パスワードのハッシュ（BCrypt・塩）、ログイン失敗の文言（ユーザー列挙の防止）、CORS は「利用者を守る」ブラウザの決まり、Cookie と CSRF、curl は誰でも使える普通の道具、XSS と React の書き方、攻撃の種類と守る場所の表 |
 | [13-likes-frontend.md](13-likes-frontend.md) | いいねの画面：結果を待ってから変える、一覧を読むときにも札が要る、二重に送らない（useRef の印）、押した状態を色だけで伝えない、テストの想定のずれ |
 | [14-comments-api.md](14-comments-api.md) | コメントの API：自分の表を指す（返信）、`ON DELETE CASCADE` で連鎖して消す、入れ子は 1 回の SQL、削除の権限（401・403・404）、N+1 の予想と結果 |
+| [15-comments-frontend.md](15-comments-frontend.md) | コメントの画面：URL の引数（useParams）、書いたあとは一覧を読み直す、入力欄の使い回し、画面の権限と本当の権限、つまずき |

@@ -60,9 +60,23 @@ export async function fetchNewCount(after: number): Promise<number> {
   return ((await res.json()) as { count: number }).count
 }
 
+// 投稿 1 件を読む（詳細画面用）。ログインなしでも見られる。見つからなければ、status 404 の ApiError
+export async function fetchPost(id: number): Promise<Post> {
+  // 札の期限が切れていると、サーバーは「ログインなし」として扱い、押した状態が false になる。先に更新しておく
+  await refreshIfExpired()
+  let res: Response
+  try {
+    res = await apiFetch(`/api/posts/${id}`)
+  } catch {
+    throw new ApiError(0, NETWORK_ERROR_MESSAGE)
+  }
+  if (!res.ok) throw new ApiError(res.status, await readMessage(res))
+  return (await res.json()) as Post
+}
+
 // ログインが要る呼び出し。札を付けて送る（期限切れなら、http.ts が自動で更新する）。
-// 失敗したときは、画面に出せる文言つきの ApiError にする
-async function callWithLogin(path: string, init: RequestInit): Promise<Response> {
+// 失敗したときは、画面に出せる文言つきの ApiError にする（コメントの API からも使う）
+export async function callWithLogin(path: string, init: RequestInit): Promise<Response> {
   let res: Response
   try {
     res = await apiFetch(path, init)

@@ -97,3 +97,16 @@ test('2 つの投稿のいいねのボタンは、名前で区別できる', () 
   const names = screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'))
   expect(new Set(names).size).toBe(2)
 })
+
+test('onOpenComments があると、コメント数が、詳細画面を開くボタンになる', async () => {
+  const onOpenComments = vi.fn()
+  const target = post(4, 'こんにちは', { commentCount: 2 })
+  render(<PostCard post={target} onOpenComments={onOpenComments} />)
+  await userEvent.click(screen.getByRole('button', { name: 'サンプルの投稿「こんにちは」のコメントを見る（2 件）' }))
+  expect(onOpenComments).toHaveBeenCalledWith(target)
+})
+
+test('onOpenComments がなければ、コメント数はボタンにならない（詳細画面の中）', () => {
+  render(<PostCard post={post(1, 'こんにちは', { commentCount: 2 })} />)
+  expect(screen.queryByRole('button', { name: /のコメントを見る/ })).not.toBeInTheDocument()
+})

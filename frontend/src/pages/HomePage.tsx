@@ -85,6 +85,8 @@ export default function HomePage() {
               // ログインなしで押されたら、ログインの画面へ案内する（いいねは、ログインが要る）
               onToggleLike={user ? (p) => void likes.toggle(p) : () => void navigate('/login')}
               likePending={likes.pendingIds.has(post.id)}
+              // コメント数を押すと、投稿の詳細画面（コメントを見る・書く）へ
+              onOpenComments={(p) => void navigate(`/posts/${p.id}`)}
             />
           )
         })}

@@ -13,3 +13,9 @@ export function formatDateTime(iso: string): string {
   if (Number.isNaN(date.getTime())) return ''
   return formatter.format(date)
 }
+
+// ボタンの名前に入れる、本文の頭（読み上げで、どの投稿・コメントのボタンか分かるように）。改行は空白 1 つにする
+export function excerpt(body: string, max = 20): string {
+  const chars = Array.from(body.replace(/\s+/g, ' '))
+  return chars.length > max ? `${chars.slice(0, max).join('')}…` : chars.join('')
+}

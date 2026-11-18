@@ -5,12 +5,13 @@ import FavoriteIcon from '@mui/icons-material/Favorite'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import type { Post } from '../api/posts'
-import { formatDateTime } from '../timeline/format'
+import { excerpt, formatDateTime } from '../timeline/format'
 
 interface Props {
   post: Post
@@ -21,16 +22,12 @@ interface Props {
   // likePending：送信中（返事が来るまで、押せない）
   onToggleLike?: (post: Post) => void
   likePending?: boolean
-}
-
-// ボタンの名前に入れる、本文の頭（読み上げで、どの投稿のボタンか分かるように）
-function excerpt(body: string, max = 20): string {
-  const chars = Array.from(body.replace(/\s+/g, ' '))
-  return chars.length > max ? `${chars.slice(0, max).join('')}…` : chars.join('')
+  // コメント数を、詳細画面を開くボタンにする。渡さなければ、数を表示するだけ（詳細画面の中）
+  onOpenComments?: (post: Post) => void
 }
 
 // 投稿 1 件のカード
-export default function PostCard({ post, onEdit, onDelete, onToggleLike, likePending = false }: Props) {
+export default function PostCard({ post, onEdit, onDelete, onToggleLike, likePending = false, onOpenComments }: Props) {
   const { author } = post
   // 例：「サンプルの投稿「こんにちは…」を編集」。どの投稿のボタンかが、名前だけで分かる（F7）
   const target = `${author.displayName}の投稿「${excerpt(post.body)}」`
@@ -72,18 +69,31 @@ export default function PostCard({ post, onEdit, onDelete, onToggleLike, likePen
                 </Typography>
               </>
             )}
-            {/* コメント数（返信を含む）。表示だけ。詳細画面へのリンクにするのは、詳細画面ができたとき。
-                アイコンと数を 1 つにまとめて、「…のコメント 3 件」と読み上げる */}
-            <Box
-              role="img"
-              aria-label={`${target}のコメント ${post.commentCount} 件`}
-              sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}
-            >
-              <ChatBubbleOutlineIcon fontSize="small" />
-              <Typography variant="body2" aria-hidden>
+            {/* コメント数（返信を含む）。onOpenComments があれば、詳細画面を開くボタン。なければ表示だけ。
+                どちらも、アイコンと数を 1 つにまとめて、「…のコメント 3 件」と読み上げる */}
+            {onOpenComments ? (
+              <Button
+                size="small"
+                color="inherit"
+                aria-label={`${target}のコメントを見る（${post.commentCount} 件）`}
+                startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
+                onClick={() => onOpenComments(post)}
+                sx={{ color: 'text.secondary', minWidth: 0 }}
+              >
                 {post.commentCount}
-              </Typography>
-            </Box>
+              </Button>
+            ) : (
+              <Box
+                role="img"
+                aria-label={`${target}のコメント ${post.commentCount} 件`}
+                sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}
+              >
+                <ChatBubbleOutlineIcon fontSize="small" />
+                <Typography variant="body2" aria-hidden>
+                  {post.commentCount}
+                </Typography>
+              </Box>
+            )}
             <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1, ml: 1.5 }}>
               {post.updatedAt ? '編集済み' : ''}
             </Typography>
