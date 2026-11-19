@@ -117,6 +117,26 @@ class CommentApiTests {
 	}
 
 	@Test
+	void 壊れたJSONは400で_messageの形で返る() throws Exception {
+		String author = loginAsNewUser();
+		long postId = createPost(author);
+
+		// 標準の形（timestamp・status・error・path）ではなく、{"message": ...} にそろえる（B12）
+		mockMvc.perform(post("/api/posts/" + postId + "/comments")
+				.header(HttpHeaders.AUTHORIZATION, bearer(author)).contentType(MediaType.APPLICATION_JSON)
+				.content("{bad"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("入力の形式が正しくありません"));
+	}
+
+	@Test
+	void 数でないパスの値は400で_messageの形で返る() throws Exception {
+		mockMvc.perform(get("/api/posts/abc"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("指定された値が正しくありません"));
+	}
+
+	@Test
 	void 投稿した本人も自分の投稿にコメントできる() throws Exception {
 		String author = loginAsNewUser();
 		long postId = createPost(author);

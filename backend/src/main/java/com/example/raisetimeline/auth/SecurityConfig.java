@@ -12,6 +12,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -45,6 +47,16 @@ public class SecurityConfig {
 				.exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 		return http.build();
+	}
+
+	// 「ユーザーを決める部品」。ログインは AuthService が自前で行い、JWT で認証するので、この部品は使わない。
+	// 定義しないと、Spring が仮のユーザー（user）とランダムなパスワードを、起動のたびに自動で作り、
+	// 「Using generated security password」の警告を出す（B13）。どの名前も「見つからない」として断る部品を置く
+	@Bean
+	UserDetailsService userDetailsService() {
+		return username -> {
+			throw new UsernameNotFoundException("ユーザーは、この部品では探さない（ログインは AuthService）");
+		};
 	}
 
 	@Bean

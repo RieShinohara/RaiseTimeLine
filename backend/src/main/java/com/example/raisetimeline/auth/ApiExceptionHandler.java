@@ -8,10 +8,12 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 // エラーを、{"message": "..."} の形にそろえて返す
 @RestControllerAdvice
@@ -34,6 +36,19 @@ public class ApiExceptionHandler {
 				.findFirst()
 				.orElse("入力が正しくありません");
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", message));
+	}
+
+	// 壊れた JSON など、読み取れない入力。Spring 標準の形（timestamp・status・error・path）でなく、
+	// 他のエラーと同じ {"message": "..."} にそろえる（B12）
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	ResponseEntity<Map<String, String>> handleNotReadable(HttpMessageNotReadableException e) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "入力の形式が正しくありません"));
+	}
+
+	// パスや検索条件の値の型が違う（例：/api/posts/abc。数が要る所に文字）。同じく {"message": "..."} にする（B12）
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	ResponseEntity<Map<String, String>> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "指定された値が正しくありません"));
 	}
 
 	// 入力の DTO（record）の項目名を、書いた順に返す。record でなければ、空
