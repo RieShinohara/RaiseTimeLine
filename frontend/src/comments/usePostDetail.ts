@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError } from '../api/errors'
 import { fetchComments, type CommentItem } from '../api/comments'
 import { fetchPost, type Post } from '../api/posts'
@@ -13,8 +13,12 @@ export function usePostDetail(postId: number) {
   const [notFound, setNotFound] = useState(false)
   // 「もう一度」を押すたびに増やして、読み込みをやり直す
   const [attempt, setAttempt] = useState(0)
+  // 一覧の読み直しの「何回目か」。読み直しが重なったとき、古い応答が、新しい一覧を上書きしないようにする（F10）
+  const latestReload = useRef(0)
 
   useEffect(() => {
+    // この読み込みより前に始めた読み直しの結果は、使わない
+    latestReload.current += 1
     let cancelled = false
     // 投稿とコメントは、互いに待たずに、同時に読む
     Promise.all([fetchPost(postId), fetchComments(postId)])
@@ -45,8 +49,13 @@ export function usePostDetail(postId: number) {
   }, [])
 
   // コメントを書いた・消したあと：一覧だけを読み直す（サーバーの順番と数が正）。投稿の本文は、そのまま
+  // 書く・消すを続けると、読み直しが重なる。応答の届く順番は、送った順とは限らないので、
+  // 自分が「最後の読み直し」のときだけ、結果を反映する（古い応答は、捨てる）
   const reloadComments = useCallback(async () => {
+    latestReload.current += 1
+    const mine = latestReload.current
     const list = await fetchComments(postId)
+    if (mine !== latestReload.current) return
     setComments(list.comments)
     setPost((current) => (current ? { ...current, commentCount: list.commentCount } : current))
   }, [postId])
