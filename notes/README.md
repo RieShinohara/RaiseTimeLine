@@ -20,3 +20,4 @@ AIエンジニア養成コースの学習記録です。Claude Code と一緒に
 | [13-likes-frontend.md](13-likes-frontend.md) | いいねの画面：結果を待ってから変える、一覧を読むときにも札が要る、二重に送らない（useRef の印）、押した状態を色だけで伝えない、テストの想定のずれ |
 | [14-comments-api.md](14-comments-api.md) | コメントの API：自分の表を指す（返信）、`ON DELETE CASCADE` で連鎖して消す、入れ子は 1 回の SQL、削除の権限（401・403・404）、N+1 の予想と結果 |
 | [15-comments-frontend.md](15-comments-frontend.md) | コメントの画面：URL の引数（useParams）、書いたあとは一覧を読み直す、入力欄の使い回し、画面の権限と本当の権限、つまずき |
+| [16-quality-check-3.md](16-quality-check-3.md) | 品質チェック（3回目）：読んだことと動かして確かめたことの区別、認可を curl で確かめる（403 は 3 人目が要る）、「見えない」と「消えた」の違い、起動ログの警告、確かめる→する の隙間、見出しの中にボタンを入れない |
