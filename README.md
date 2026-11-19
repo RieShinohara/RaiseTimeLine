@@ -67,7 +67,7 @@ AIエンジニア養成コースの課題として作る、3本目の個人開�
 2. タイムラインと投稿（いま、ここ） → コメントといいね → プロフィールとフォロー → ユーザー検索
 3. 仕様書の自動生成、テスト・監視・ログ、CI、AWS への配置（上級編）
 
-動かし方（起動のコマンド）は、[CLAUDE.md](CLAUDE.md) の 5 に、まとめてあります（README への整理は、これから）。
+動かし方（起動・停止の手順）は、[起動・停止の手順書](docs/run-guide.md) にまとめてあります。
 
 ## 文書
 
@@ -78,6 +78,7 @@ AIエンジニア養成コースの課題として作る、3本目の個人開�
 - [データ設計](docs/database-design.md)
 - [非機能要件](docs/non-functional-requirements.md)
 - [技術スタック](docs/tech-stack.md)
+- [起動・停止の手順書](docs/run-guide.md)
 - [学習ノート](notes/README.md)
 
 開発のルール（GitHub の運用、公開リポジトリとしての注意）は、[CLAUDE.md](CLAUDE.md) に書いています。
