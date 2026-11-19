@@ -111,6 +111,8 @@ SNS アプリは、ユーザー登録・ログイン・画像など、**個人�
 ## 5. 開発のコマンド
 **バックエンドの土台（2026-11-15）は、動くことを確かめた**（DB の起動 → `bootRun` → `/actuator/health` が UP、`check` が成功）。**画面（frontend/）の土台も、動くことを確かめた**（`npm test`・`lint`・`format:check`・`build` が成功。ブラウザで表示を確認）。**画面のコマンドは、PowerShell で実行する**（Git Bash だと、`npm test` が失敗することがあった。原因は未確認。[技術スタック](docs/tech-stack.md) 4）。初めて使うときは、リポジトリ直下で、`.env.example` を `.env` にコピーして、パスワードを書く。
 
+初学者向けの、詳しい起動・停止の手順（つまずき対処つき）は、[docs/run-guide.md](docs/run-guide.md)。
+
 | やりたいこと | コマンド（予定） | 場所 |
 |---|---|---|
 | DBを起動／停止 | `docker compose up -d` ／ `docker compose down` | リポジトリ直下（先に Docker Desktop を起動） |
