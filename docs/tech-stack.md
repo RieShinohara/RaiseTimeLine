@@ -16,9 +16,10 @@
 | DB | PostgreSQL 18（開発は Docker） | |
 | DB への接続 | **MyBatis**（`mybatis-spring-boot-starter`）＋ PostgreSQL ドライバ | TaskManagement の Spring Data JPA からの変更（2026-11-14 ユーザー決定。講義にそろえ、SQL を自分で書く経験をする）。**版は 4.1.0 に確定**（2026-11-15。Maven Central の最新。公式ページの互換表は 4.0 まで「Spring Boot 4.0+」と書かれているが、Spring Boot 4.1.1 で、起動・DB への SQL・テストが動くことを確かめた） |
 | 認証 | **Spring Security ＋ JWT**（`jjwt`）。パスワードは BCrypt | 2026-11-14 決定、2026-11-15 更新（[01 認証](features/01-auth.md) 3.5）。**アクセストークン 15 分 ＋ リフレッシュトークン 7 日**（リフレッシュは UUID で DB に保存）。JWT の署名の鍵は、リポジトリに入れない |
-| DB の構造の管理 | Flyway | `ddl-auto` は `validate` |
+| DB の構造の管理 | Flyway | 移行ファイルは `backend/src/main/resources/db/migration`（V1〜）。JPA は使わないので、`ddl-auto` はない（MyBatis に変更したため） |
 | 画面 | React 19.3.1 ＋ TypeScript 7.0.2 | |
 | 画面のビルド | Vite 8.3.8 | |
+| 画面の URL の切り替え（ルーター） | **`react-router-dom`** 7.18.5 | 認証の画面（講義 27）で導入。ログイン・登録・タイムライン・投稿の詳細画面（`/posts/:id`）の切り替えに使う |
 | UI の部品・見た目 | **Material UI**（`@mui/material`） | TaskManagement の Tailwind CSS からの変更。**版は 9.5.0 に確定**（2026-11-15。最新。React 19.3.1・TypeScript 7.0.2・Vite 8.3.8 で、テスト・静的チェック・ビルド・ブラウザ表示が動くことを確かめた。先生は 7。部品の使い方が、講義と違うことがある）。あわせて `@emotion/react`・`@emotion/styled`（Material UI が使う部品） |
 | アイコン | **`@mui/icons-material`** | **9.5.0 に確定**（2026-11-16。ユーザーが「入れてください」と決定。講義 28 の画面で、編集・削除のアイコンが要る。⑥のハート・コメントでも使う）。`@mui/material` と同じ 9.5.0（peerDependencies は `@mui/material ^9.5.0`）。**使うアイコンだけを、1 つずつ import する**（例：`@mui/icons-material/EditOutlined`。約 4 万個あるので、まとめて import しない）。線の細い版の名前は `〇〇Outlined`（`DeleteOutlined`。`DeleteOutline` ではない） |
 | 画面のテスト | Vitest 5.0.4 | |
