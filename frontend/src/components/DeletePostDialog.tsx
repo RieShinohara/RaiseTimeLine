@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import { useState } from 'react'
 import { deletePost, type Post } from '../api/posts'
+import { useRestoreFocusOnClose } from './useRestoreFocusOnClose'
 
 interface Props {
   // 消そうとしている投稿。null のときは、閉じている
@@ -21,6 +22,8 @@ interface Props {
 export default function DeletePostDialog({ post, onClose, onDeleted }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  // 閉じたあと、押したボタンへ、フォーカスを戻す（閉じる前に戻すと、ブラウザが警告する。F12）
+  const restoreFocus = useRestoreFocusOnClose(post !== null)
 
   function close() {
     setError(null)
@@ -44,18 +47,9 @@ export default function DeletePostDialog({ post, onClose, onDeleted }: Props) {
   }
 
   return (
-    <Dialog open={post !== null} onClose={deleting ? undefined : close} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ pr: 6 }}>
-        確認
-        <IconButton
-          aria-label="閉じる"
-          onClick={close}
-          disabled={deleting}
-          sx={{ position: 'absolute', right: 8, top: 8 }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+    <Dialog {...restoreFocus} open={post !== null} onClose={deleting ? undefined : close} fullWidth maxWidth="xs">
+      {/* 見出しは、何を消すかが分かる文字だけにする（「閉じる」ボタンを入れると、名前が「確認 閉じる」になる。F11） */}
+      <DialogTitle sx={{ pr: 6 }}>投稿を削除</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -75,6 +69,14 @@ export default function DeletePostDialog({ post, onClose, onDeleted }: Props) {
           削除する
         </Button>
       </DialogActions>
+      <IconButton
+        aria-label="閉じる"
+        onClick={close}
+        disabled={deleting}
+        sx={{ position: 'absolute', right: 8, top: 8 }}
+      >
+        <CloseIcon />
+      </IconButton>
     </Dialog>
   )
 }

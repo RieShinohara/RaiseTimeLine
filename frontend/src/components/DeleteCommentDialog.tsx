@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import { useState } from 'react'
 import { deleteComment } from '../api/comments'
+import { useRestoreFocusOnClose } from './useRestoreFocusOnClose'
 
 // 消そうとしているコメント（または返信）
 export interface DeleteTarget {
@@ -29,6 +30,8 @@ interface Props {
 export default function DeleteCommentDialog({ target, onClose, onDeleted }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  // 閉じたあと、押したボタンへ、フォーカスを戻す（閉じる前に戻すと、ブラウザが警告する。F12）
+  const restoreFocus = useRestoreFocusOnClose(target !== null)
 
   function close() {
     setError(null)
@@ -53,18 +56,10 @@ export default function DeleteCommentDialog({ target, onClose, onDeleted }: Prop
 
   const noun = target?.isReply ? '返信' : 'コメント'
   return (
-    <Dialog open={target !== null} onClose={deleting ? undefined : close} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ pr: 6 }}>
-        確認
-        <IconButton
-          aria-label="閉じる"
-          onClick={close}
-          disabled={deleting}
-          sx={{ position: 'absolute', right: 8, top: 8 }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+    <Dialog {...restoreFocus} open={target !== null} onClose={deleting ? undefined : close} fullWidth maxWidth="xs">
+      {/* 見出しは、何を消すかが分かる文字だけにする。ダイアログの名前は、見出しの文字から作られるので、
+          「閉じる」ボタンを、見出しの中に入れると、名前が「確認 閉じる」になる（F11） */}
+      <DialogTitle sx={{ pr: 6 }}>{noun}を削除</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -84,6 +79,14 @@ export default function DeleteCommentDialog({ target, onClose, onDeleted }: Prop
           削除する
         </Button>
       </DialogActions>
+      <IconButton
+        aria-label="閉じる"
+        onClick={close}
+        disabled={deleting}
+        sx={{ position: 'absolute', right: 8, top: 8 }}
+      >
+        <CloseIcon />
+      </IconButton>
     </Dialog>
   )
 }
