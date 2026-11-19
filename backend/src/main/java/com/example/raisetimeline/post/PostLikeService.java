@@ -1,5 +1,6 @@
 package com.example.raisetimeline.post;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,12 @@ public class PostLikeService {
 
 	public LikeResponse like(Long userId, Long postId) {
 		requireExists(postId);
-		postLikeMapper.insert(postId, userId);
+		try {
+			postLikeMapper.insert(postId, userId);
+		} catch (DataIntegrityViolationException e) {
+			// 確かめたあとに、投稿が消された（外部キーが止めた）。コメントと同じく、404 にする（B11）
+			throw new ApiException(HttpStatus.NOT_FOUND, "投稿が見つかりません");
+		}
 		return current(userId, postId);
 	}
 
