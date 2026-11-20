@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- users 表の操作。値は必ず #{} で渡す（${} は SQL インジェクションの元なので使わない） -->
+<mapper namespace="com.example.raisetimeline.auth.UserMapper">
+
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		INSERT INTO users (email, username, display_name, password_hash)
+		VALUES (#{email}, #{username}, #{displayName}, #{passwordHash})
+	</insert>
+
+	<select id="findByEmail" resultType="com.example.raisetimeline.auth.User">
+		SELECT * FROM users WHERE email = #{email}
+	</select>
+
+	<select id="findById" resultType="com.example.raisetimeline.auth.User">
+		SELECT * FROM users WHERE id = #{id}
+	</select>
+
+	<select id="existsByEmail" resultType="boolean">
+		SELECT COUNT(*) &gt; 0 FROM users WHERE email = #{email}
+	</select>
+
+	<select id="existsByUsername" resultType="boolean">
+		SELECT COUNT(*) &gt; 0 FROM users WHERE lower(username) = lower(#{username})
+	</select>
+
+</mapper>

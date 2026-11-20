@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- comments 表の操作。値は必ず #{} で渡す -->
+<mapper namespace="com.example.raisetimeline.comment.CommentMapper">
+
+	<!-- コメントした人の名前つきで読むときの、共通の列（1 回だけ書いて、使い回す） -->
+	<sql id="commentColumns">
+		c.id, c.post_id, c.user_id, c.parent_comment_id, c.body, c.created_at, u.username, u.display_name
+	</sql>
+
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		INSERT INTO comments (post_id, user_id, parent_comment_id, body)
+		VALUES (#{postId}, #{userId}, #{parentCommentId}, #{body})
+	</insert>
+
+	<!-- 古い順（id は増える番号なので、id の小さい順＝古い順）。コメントした人の名前も、1 回の SQL で読む。
+	     コメントと返信を、まとめて読む（入れ子にするのは Service） -->
+	<select id="findByPostId" resultType="com.example.raisetimeline.comment.Comment">
+		SELECT <include refid="commentColumns"/>
+		FROM comments c
+		JOIN users u ON u.id = c.user_id
+		WHERE c.post_id = #{postId}
+		ORDER BY c.id
+	</select>
+
+	<select id="findById" resultType="com.example.raisetimeline.comment.Comment">
+		SELECT <include refid="commentColumns"/>
+		FROM comments c
+		JOIN users u ON u.id = c.user_id
+		WHERE c.id = #{id}
+	</select>
+
+	<select id="countByPostId" resultType="long">
+		SELECT COUNT(*) FROM comments WHERE post_id = #{postId}
+	</select>
+
+	<!-- 一覧用：投稿の id の一覧を渡して、コメント数を、まとめて 1 回で数える（N+1 を避ける）。
+	     postIds は、空にしない（IN () は、SQL の間違いになる）。呼ぶ側で確かめる -->
+	<select id="countByPostIds" resultType="com.example.raisetimeline.comment.CommentMapper$CommentCount">
+		SELECT post_id AS postId, COUNT(*) AS commentCount
+		FROM comments
+		WHERE post_id IN
+		<foreach collection="postIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+		GROUP BY post_id
+	</select>
+
+	<!-- 返信は、DB の ON DELETE CASCADE で、一緒に消える -->
+	<delete id="deleteById">
+		DELETE FROM comments WHERE id = #{id}
+	</delete>
+
+</mapper>
