@@ -16,6 +16,11 @@
 		SELECT * FROM users WHERE id = #{id}
 	</select>
 
+	<!-- ユーザー名は、大文字小文字を区別しない（existsByUsername と同じ決まり） -->
+	<select id="findByUsername" resultType="com.example.raisetimeline.auth.User">
+		SELECT * FROM users WHERE lower(username) = lower(#{username})
+	</select>
+
 	<select id="existsByEmail" resultType="boolean">
 		SELECT COUNT(*) &gt; 0 FROM users WHERE email = #{email}
 	</select>

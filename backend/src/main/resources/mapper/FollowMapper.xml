@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- follows 表の操作。値は必ず #{} で渡す -->
+<mapper namespace="com.example.raisetimeline.follow.FollowMapper">
+
+	<!-- すでにフォローしていても、エラーにしない（ON CONFLICT DO NOTHING）。確認と追加を、1 つの SQL で行うので、
+	     同時に 2 回押されても、行は 1 つだけになる -->
+	<insert id="insert">
+		INSERT INTO follows (follower_id, followee_id)
+		VALUES (#{followerId}, #{followeeId})
+		ON CONFLICT DO NOTHING
+	</insert>
+
+	<!-- フォローしていなくても、エラーにしない（結果は同じ「フォローしていない」） -->
+	<delete id="delete">
+		DELETE FROM follows WHERE follower_id = #{followerId} AND followee_id = #{followeeId}
+	</delete>
+
+	<!-- フォロワー数：followee_id（フォローされる側）が、その人の行を数える -->
+	<select id="countFollowers" resultType="long">
+		SELECT COUNT(*) FROM follows WHERE followee_id = #{userId}
+	</select>
+
+</mapper>
