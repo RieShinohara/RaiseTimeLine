@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- posts 表の操作。値は必ず #{} で渡す（${} は SQL インジェクションの元なので使わない）。
+     SQL の中の < や > は、XML では記号として読まれるので、&lt; &gt; と書くか、CDATA で囲む -->
+<mapper namespace="com.example.raisetimeline.post.PostMapper">
+
+	<!-- 投稿者の名前つきで読むときの、共通の列（1 回だけ書いて、使い回す） -->
+	<sql id="postColumns">
+		p.id, p.user_id, p.body, p.created_at, p.updated_at, u.username, u.display_name
+	</sql>
+
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		INSERT INTO posts (user_id, body)
+		VALUES (#{userId}, #{body})
+	</insert>
+
+	<!-- 新しい順（id は、投稿のたびに増える番号なので、id の大きい順＝新しい順）。投稿者の名前も、1 回の SQL で読む。
+	     before が空なら最新から、あれば「id が before より小さい（古い）」ものだけ -->
+	<select id="findOlderThan" resultType="com.example.raisetimeline.post.Post">
+		SELECT <include refid="postColumns"/>
+		FROM posts p
+		JOIN users u ON u.id = p.user_id
+		WHERE (#{before}::bigint IS NULL OR p.id &lt; #{before})
+		ORDER BY p.id DESC
+		LIMIT #{limit}
+	</select>
+
+	<select id="findById" resultType="com.example.raisetimeline.post.Post">
+		SELECT <include refid="postColumns"/>
+		FROM posts p
+		JOIN users u ON u.id = p.user_id
+		WHERE p.id = #{id}
+	</select>
+
+	<select id="countNewerThan" resultType="long">
+		SELECT COUNT(*) FROM posts WHERE id &gt; #{after}
+	</select>
+
+	<!-- ログイン中の人は、自分の投稿を、新着に数えない -->
+	<select id="countNewerThanExcludingUser" resultType="long">
+		SELECT COUNT(*) FROM posts WHERE id &gt; #{after} AND user_id &lt;&gt; #{userId}
+	</select>
+
+	<!-- 本人の投稿だけを更新する（user_id も条件に入れる）。確認と更新の間に、投稿が消された・持ち主が違う場合は、0 件になる（B8） -->
+	<update id="updateBody">
+		UPDATE posts SET body = #{body}, updated_at = now() WHERE id = #{id} AND user_id = #{userId}
+	</update>
+
+	<delete id="deleteById">
+		DELETE FROM posts WHERE id = #{id} AND user_id = #{userId}
+	</delete>
+
+</mapper>
