@@ -35,11 +35,26 @@ public class PostService {
 	// before：この id より古い投稿を返す（空なら最新から）。size：1〜50
 	// userId：ログイン中の人（ログインなしは null）。「自分が押したか」の判断に使う
 	public PostPageResponse list(Long before, int size, Long userId) {
+		requireValidSize(size);
+		// 1 件多く読んで、続きがあるかを知る
+		return toPage(postMapper.findOlderThan(before, size + 1), size, userId);
+	}
+
+	// プロフィール用：authorId の人の投稿だけ。見せ方は、list と同じ（新しい順、続きの目印、数のまとめ読み）。
+	// authorId の人がいるかの確認は、呼ぶ側（ProfileService）で行う
+	public PostPageResponse listByUserId(Long authorId, Long before, int size, Long userId) {
+		requireValidSize(size);
+		return toPage(postMapper.findOlderThanByUserId(authorId, before, size + 1), size, userId);
+	}
+
+	private static void requireValidSize(int size) {
 		if (size < 1 || size > MAX_SIZE) {
 			throw new ApiException(HttpStatus.BAD_REQUEST, "size は 1〜" + MAX_SIZE + " で指定してください");
 		}
-		// 1 件多く読んで、続きがあるかを知る
-		List<Post> rows = postMapper.findOlderThan(before, size + 1);
+	}
+
+	// rows は、size + 1 件まで読んだ結果。size 件に切って、数と「押したか」を、まとめて付ける
+	private PostPageResponse toPage(List<Post> rows, int size, Long userId) {
 		boolean hasNext = rows.size() > size;
 		List<Post> page = rows.stream().limit(size).toList();
 		// N+1 を避ける：数と「押したか」は、20 件ぶんを、まとめて 1 回ずつ聞く（全部で 1 + 1 + 1 回。

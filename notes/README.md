@@ -25,3 +25,4 @@ AIエンジニア養成コースの学習記録です。Claude Code と一緒に
 | [18-frontend-qc3-fixes.md](18-frontend-qc3-fixes.md) | 品質チェック 3 回目の指摘を直す（画面）：古い応答が新しい結果を上書きする競合（番号札で対策・応答の順番を逆にするテスト）、ダイアログの名前は見出しの文字から作られる、警告は「閉じるとき」に出ていた（開くときだけ調べて、見落とした）、フォーカスを戻すタイミング、jsdom と本物のブラウザの違い |
 | [19-mybatis-xml-mappers.md](19-mybatis-xml-mappers.md) | MyBatis の SQL を XML に統一：アノテーション方式と XML 方式の比べ方、interface と XML を名前（namespace・id）で結ぶ、`<` を `&lt;` と書く、`<sql>`・`<include>` で列を使い回す、わざと壊して XML が使われていることを確かめる。**基礎の復習つき**：SQL・MyBatis・XML とは、.java と .xml の関係（メニュー表とレシピ）、`id` と `post_id`、JOIN、クラスとメソッド |
 | [20-follow-api.md](20-follow-api.md) | フォローの API：「誰が、誰を」の組の表（follower・followee）、二重・自分自身・相手が消えた場合を、DB の守りで止める（主キー・CHECK・外部キー）、いいねと同じ作りの再利用、わざと壊して数えるテストを確かめる |
+| [21-profile-api.md](21-profile-api.md) | プロフィールの API：GET と PUT で別の API、「本人だけ」をサーバーが守る（403）、`/me` を使わない理由、既存の処理を取り出して使い回す、応答に出してはいけない物（メール）、境界（50・51、160・161）でテストする、わざと壊す確認 |

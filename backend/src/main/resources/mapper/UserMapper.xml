@@ -21,6 +21,11 @@
 		SELECT * FROM users WHERE lower(username) = lower(#{username})
 	</select>
 
+	<!-- プロフィールの編集。表示名と自己紹介だけ（ユーザー名・メールは、変えない）。bio は、空なら null -->
+	<update id="updateProfile">
+		UPDATE users SET display_name = #{displayName}, bio = #{bio} WHERE id = #{id}
+	</update>
+
 	<select id="existsByEmail" resultType="boolean">
 		SELECT COUNT(*) &gt; 0 FROM users WHERE email = #{email}
 	</select>

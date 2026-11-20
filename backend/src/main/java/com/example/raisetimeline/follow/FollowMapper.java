@@ -14,4 +14,10 @@ public interface FollowMapper {
 	// フォロワー数（その人を、フォローしている人の数）
 	long countFollowers(@Param("userId") Long userId);
 
+	// フォロー数（その人が、フォローしている人の数）
+	long countFollowing(@Param("userId") Long userId);
+
+	// followerId の人は、followeeId の人を、フォローしているか
+	boolean exists(@Param("followerId") Long followerId, @Param("followeeId") Long followeeId);
+
 }
