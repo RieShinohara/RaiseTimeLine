@@ -21,4 +21,13 @@
 		SELECT COUNT(*) FROM follows WHERE followee_id = #{userId}
 	</select>
 
+	<!-- フォロー数：follower_id（フォローする側）が、その人の行を数える -->
+	<select id="countFollowing" resultType="long">
+		SELECT COUNT(*) FROM follows WHERE follower_id = #{userId}
+	</select>
+
+	<select id="exists" resultType="boolean">
+		SELECT EXISTS (SELECT 1 FROM follows WHERE follower_id = #{followerId} AND followee_id = #{followeeId})
+	</select>
+
 </mapper>

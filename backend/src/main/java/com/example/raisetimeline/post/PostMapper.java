@@ -13,6 +13,10 @@ public interface PostMapper {
 
 	List<Post> findOlderThan(@Param("before") Long before, @Param("limit") int limit);
 
+	// そのユーザーの投稿だけ（プロフィール用）。使い方は findOlderThan と同じ
+	List<Post> findOlderThanByUserId(@Param("userId") Long userId, @Param("before") Long before,
+			@Param("limit") int limit);
+
 	Post findById(@Param("id") Long id);
 
 	long countNewerThan(@Param("after") long after);

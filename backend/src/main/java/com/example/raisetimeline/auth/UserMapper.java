@@ -15,6 +15,8 @@ public interface UserMapper {
 
 	User findByUsername(@Param("username") String username);
 
+	int updateProfile(@Param("id") Long id, @Param("displayName") String displayName, @Param("bio") String bio);
+
 	boolean existsByEmail(@Param("email") String email);
 
 	boolean existsByUsername(@Param("username") String username);

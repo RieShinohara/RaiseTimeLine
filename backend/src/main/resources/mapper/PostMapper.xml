@@ -25,6 +25,16 @@
 		LIMIT #{limit}
 	</select>
 
+	<!-- そのユーザーの投稿だけ（プロフィール用）。findOlderThan に、user_id の条件を足した形 -->
+	<select id="findOlderThanByUserId" resultType="com.example.raisetimeline.post.Post">
+		SELECT <include refid="postColumns"/>
+		FROM posts p
+		JOIN users u ON u.id = p.user_id
+		WHERE p.user_id = #{userId} AND (#{before}::bigint IS NULL OR p.id &lt; #{before})
+		ORDER BY p.id DESC
+		LIMIT #{limit}
+	</select>
+
 	<select id="findById" resultType="com.example.raisetimeline.post.Post">
 		SELECT <include refid="postColumns"/>
 		FROM posts p
