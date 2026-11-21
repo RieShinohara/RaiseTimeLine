@@ -140,14 +140,26 @@ function Profile({ username }: { username: string }) {
             <Typography sx={{ mt: 2, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{profile.bio}</Typography>
           )}
 
-          {/* フォロー中・フォロワーの数（一覧の画面は、このあと） */}
+          {/* フォロー中・フォロワーの数。押すと、一覧の画面（UC-16）へ */}
           <Box sx={{ display: 'flex', gap: 3, mt: 2 }}>
-            <Typography variant="body2">
+            <Link
+              component={RouterLink}
+              to={`/users/${encodeURIComponent(profile.username)}/following`}
+              variant="body2"
+              underline="hover"
+              color="inherit"
+            >
               <strong>{profile.followingCount}</strong> フォロー中
-            </Typography>
-            <Typography variant="body2">
+            </Link>
+            <Link
+              component={RouterLink}
+              to={`/users/${encodeURIComponent(profile.username)}/followers`}
+              variant="body2"
+              underline="hover"
+              color="inherit"
+            >
               <strong>{profile.followerCount}</strong> フォロワー
-            </Typography>
+            </Link>
           </Box>
 
           <Typography component="h3" variant="h6" sx={{ mt: 3, mb: 1 }}>
