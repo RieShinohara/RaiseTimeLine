@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { fetchPosts, type Post } from '../api/posts'
+import { fetchPosts, type Post, type PostPage } from '../api/posts'
 
 // 投稿が 1 件もないときの、「ここより新しい」の基準（id は 1 から始まるので、0 より大きい投稿は、すべて新着）
 export const NO_POSTS_ID = 0
@@ -9,8 +9,9 @@ function topId(posts: Post[]): number {
   return posts[0]?.id ?? NO_POSTS_ID
 }
 
-// タイムライン（全体）の、投稿の並びと、続きの読み込み
-export function useTimeline() {
+// 投稿の並びと、続きの読み込み。fetchPage は「このページを読む」関数（省略すると、タイムライン（全体））。
+// 渡すときは、毎回同じ関数にする（useCallback）。別の読み先（別のユーザーなど）に変えるときは、呼ぶ側が key で作り直す
+export function useTimeline(fetchPage: (before?: number) => Promise<PostPage> = fetchPosts) {
   const [posts, setPosts] = useState<Post[]>([])
   const [hasNext, setHasNext] = useState(true)
   const [loading, setLoading] = useState(false)
@@ -32,7 +33,7 @@ export function useTimeline() {
     setError(null)
     try {
       const before = cursor.current
-      const result = await fetchPosts(before)
+      const result = await fetchPage(before)
       cursor.current = result.posts.at(-1)?.id ?? before
       if (before === undefined) setSyncedId(topId(result.posts))
       setPosts((current) => [...current, ...result.posts])
@@ -43,7 +44,7 @@ export function useTimeline() {
       busy.current = false
       setLoading(false)
     }
-  }, [])
+  }, [fetchPage])
 
   // 新着バナーを押したとき：1 ページ目から読み直して、一覧を入れ替える。成功したら true。
   // 失敗したときや、ほかの読み込み中のときは、何も変えず false（バナーは残り、もう一度、押せる）
@@ -51,7 +52,7 @@ export function useTimeline() {
     if (busy.current) return false
     busy.current = true
     try {
-      const result = await fetchPosts()
+      const result = await fetchPage()
       cursor.current = result.posts.at(-1)?.id
       setSyncedId(topId(result.posts))
       setPosts(result.posts)
@@ -63,7 +64,7 @@ export function useTimeline() {
     } finally {
       busy.current = false
     }
-  }, [])
+  }, [fetchPage])
 
   // 画面を開いたときに、最初のページを読む
   useEffect(() => {

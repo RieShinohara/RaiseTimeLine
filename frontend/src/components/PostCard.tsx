@@ -11,6 +11,7 @@ import CardContent from '@mui/material/CardContent'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import type { Post } from '../api/posts'
+import AuthorName from './AuthorName'
 import { excerpt, formatDateTime } from '../timeline/format'
 
 interface Props {
@@ -24,10 +25,20 @@ interface Props {
   likePending?: boolean
   // コメント数を、詳細画面を開くボタンにする。渡さなければ、数を表示するだけ（詳細画面の中）
   onOpenComments?: (post: Post) => void
+  // 表示名・@ユーザー名を、プロフィールを開くリンクにする。渡さなければ、表示するだけ（プロフィールの画面の中）
+  onOpenAuthor?: (username: string) => void
 }
 
 // 投稿 1 件のカード
-export default function PostCard({ post, onEdit, onDelete, onToggleLike, likePending = false, onOpenComments }: Props) {
+export default function PostCard({
+  post,
+  onEdit,
+  onDelete,
+  onToggleLike,
+  likePending = false,
+  onOpenComments,
+  onOpenAuthor,
+}: Props) {
   const { author } = post
   // 例：「サンプルの投稿「こんにちは…」を編集」。どの投稿のボタンかが、名前だけで分かる（F7）
   const target = `${author.displayName}の投稿「${excerpt(post.body)}」`
@@ -38,12 +49,7 @@ export default function PostCard({ post, onEdit, onDelete, onToggleLike, likePen
         <Avatar aria-hidden>{Array.from(author.displayName)[0] ?? '?'}</Avatar>
         <Box sx={{ minWidth: 0, flexGrow: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-            <Typography component="span" noWrap sx={{ fontWeight: 'bold' }}>
-              {author.displayName}
-            </Typography>
-            <Typography component="span" variant="body2" color="text.secondary" noWrap sx={{ flexGrow: 1 }}>
-              @{author.username}
-            </Typography>
+            <AuthorName displayName={author.displayName} username={author.username} onOpen={onOpenAuthor} />
             <Typography component="time" variant="caption" color="text.secondary" dateTime={post.createdAt}>
               {formatDateTime(post.createdAt)}
             </Typography>

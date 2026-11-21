@@ -26,8 +26,15 @@ export default function Header() {
         </Typography>
         {user ? (
           <>
+            {/* 自分のプロフィールへ。名前の文字のまま、リンクにする */}
             <Typography variant="body2" sx={{ mr: 2 }}>
-              {user.displayName}（@{user.username}）
+              <Box
+                component={RouterLink}
+                to={`/users/${encodeURIComponent(user.username)}`}
+                sx={{ color: 'inherit', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+              >
+                {user.displayName}（@{user.username}）
+              </Box>
             </Typography>
             <Button color="inherit" onClick={handleLogout}>
               ログアウト
