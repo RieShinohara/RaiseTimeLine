@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { login as loginApi, logout as logoutApi } from '../api/auth'
 import { setAuthLostHandler } from '../api/http'
-import { clearSession, getRefreshToken, getUser, saveSession, type AuthUser } from './tokenStorage'
+import { clearSession, getRefreshToken, getUser, saveSession, saveUser, type AuthUser } from './tokenStorage'
 import { AuthContext } from './useAuth'
 
 // 「今、ログイン中の人」を持ち、画面全体に配る部品（取り出すときは、useAuth を使う）
@@ -34,6 +34,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const value = useMemo(() => ({ user, login, logout }), [user, login, logout])
+  // 表示名などが変わったとき：画面の状態と、保存してある情報の両方を、新しくする（再読み込みしても、新しい名前のまま）
+  const updateUser = useCallback(
+    (changes: Partial<Pick<AuthUser, 'displayName'>>) => {
+      if (!user) return
+      const next = { ...user, ...changes }
+      saveUser(next)
+      setUser(next)
+    },
+    [user],
+  )
+
+  const value = useMemo(() => ({ user, login, logout, updateUser }), [user, login, logout, updateUser])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

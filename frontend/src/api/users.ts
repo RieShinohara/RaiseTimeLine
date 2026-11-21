@@ -47,6 +47,17 @@ export function fetchUserPosts(username: string, before?: number, size: number =
   return getJson<PostPage>(`/api/users/${encodeURIComponent(username)}/posts?${query}`)
 }
 
+// 自分のプロフィールを直す（本人だけ。他の人のは、サーバーが 403 で断る）。ユーザー名・メールは、変えられない。
+// bio は、空なら、サーバーが「未設定（null）」にする。返事は、直したあとのプロフィール
+export async function updateProfile(username: string, input: { displayName: string; bio: string }): Promise<Profile> {
+  const res = await callWithLogin(`/api/users/${encodeURIComponent(username)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  return (await res.json()) as Profile
+}
+
 // フォローする（何回押しても、結果は同じ）。ログインが要る
 export async function followUser(username: string): Promise<FollowState> {
   const res = await callWithLogin(`/api/users/${encodeURIComponent(username)}/follow`, { method: 'PUT' })

@@ -66,5 +66,19 @@ export function useProfile(username: string) {
 
   const clearFollowError = useCallback(() => setFollowError(null), [])
 
-  return { profile, loading, error, notFound, load, followPending, followError, toggleFollow, clearFollowError }
+  // 編集して保存したあと：サーバーが返した新しいプロフィールで、画面の内容を置き換える
+  const applyProfile = useCallback((p: Profile) => setProfile(p), [])
+
+  return {
+    profile,
+    loading,
+    error,
+    notFound,
+    load,
+    followPending,
+    followError,
+    toggleFollow,
+    clearFollowError,
+    applyProfile,
+  }
 }
