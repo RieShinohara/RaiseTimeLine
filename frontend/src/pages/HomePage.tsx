@@ -87,6 +87,8 @@ export default function HomePage() {
               likePending={likes.pendingIds.has(post.id)}
               // コメント数を押すと、投稿の詳細画面（コメントを見る・書く）へ
               onOpenComments={(p) => void navigate(`/posts/${p.id}`)}
+              // 名前を押すと、その人のプロフィールへ
+              onOpenAuthor={(username) => void navigate(`/users/${encodeURIComponent(username)}`)}
             />
           )
         })}

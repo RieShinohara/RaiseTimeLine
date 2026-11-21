@@ -48,6 +48,9 @@ function PostDetail({ postId }: { postId: number }) {
     await refresh()
   }
 
+  // 投稿・コメントの名前を押すと、その人のプロフィールへ
+  const openProfile = (username: string) => void navigate(`/users/${encodeURIComponent(username)}`)
+
   const back = (
     <Link
       component={RouterLink}
@@ -100,6 +103,7 @@ function PostDetail({ postId }: { postId: number }) {
             post={user ? post : { ...post, likedByMe: false }}
             onToggleLike={user ? (p) => void likes.toggle(p) : () => void navigate('/login')}
             likePending={likes.pendingIds.has(post.id)}
+            onOpenAuthor={openProfile}
           />
 
           <Typography component="h2" variant="h6" sx={{ mt: 3, mb: 1 }}>
@@ -146,6 +150,7 @@ function PostDetail({ postId }: { postId: number }) {
                   postAuthorId={post.author.id}
                   onReply={(parentId, body) => submit(body, parentId)}
                   onDelete={setDeleting}
+                  onOpenAuthor={openProfile}
                 />
               ))}
             </Box>

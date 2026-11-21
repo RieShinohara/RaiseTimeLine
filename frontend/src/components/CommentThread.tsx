@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography'
 import { useState } from 'react'
 import type { CommentItem, Reply } from '../api/comments'
 import { excerpt, formatDateTime } from '../timeline/format'
+import AuthorName from './AuthorName'
 import CommentForm from './CommentForm'
 import type { DeleteTarget } from './DeleteCommentDialog'
 
@@ -17,6 +18,8 @@ interface Props {
   // 返信を書く（ログインしているときだけ、「返信」のボタンが出る）
   onReply: (parentCommentId: number, body: string) => Promise<void>
   onDelete: (target: DeleteTarget) => void
+  // 書いた人の名前を押したとき、プロフィールを開く（渡さなければ、名前を表示するだけ）
+  onOpenAuthor?: (username: string) => void
 }
 
 // コメント 1 件の表示（コメントと返信で共用）。返信には「返信」ボタンはない（返信は 1 段だけ。CMT-1a）
@@ -25,11 +28,13 @@ function CommentRow({
   canDelete,
   onDelete,
   onReplyClick,
+  onOpenAuthor,
 }: {
   item: Reply
   canDelete: boolean
   onDelete: () => void
   onReplyClick?: () => void
+  onOpenAuthor?: (username: string) => void
 }) {
   const { author } = item
   // 例：「サンプルのコメント「こんにちは…」に返信」。どのコメントのボタンかが、名前だけで分かる
@@ -41,12 +46,7 @@ function CommentRow({
       </Avatar>
       <Box sx={{ minWidth: 0, flexGrow: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-          <Typography component="span" noWrap sx={{ fontWeight: 'bold' }}>
-            {author.displayName}
-          </Typography>
-          <Typography component="span" variant="body2" color="text.secondary" noWrap sx={{ flexGrow: 1 }}>
-            @{author.username}
-          </Typography>
+          <AuthorName displayName={author.displayName} username={author.username} onOpen={onOpenAuthor} />
           <Typography component="time" variant="caption" color="text.secondary" dateTime={item.createdAt}>
             {formatDateTime(item.createdAt)}
           </Typography>
@@ -71,7 +71,14 @@ function CommentRow({
 }
 
 // コメントと、その返信（古い順）。「返信」を押すと、そのコメントの下に、返信の入力欄が開く
-export default function CommentThread({ comment, currentUserId, postAuthorId, onReply, onDelete }: Props) {
+export default function CommentThread({
+  comment,
+  currentUserId,
+  postAuthorId,
+  onReply,
+  onDelete,
+  onOpenAuthor,
+}: Props) {
   const [replying, setReplying] = useState(false)
   const canDeleteItem = (item: Reply) =>
     currentUserId !== null && (item.author.id === currentUserId || postAuthorId === currentUserId)
@@ -83,6 +90,7 @@ export default function CommentThread({ comment, currentUserId, postAuthorId, on
         canDelete={canDeleteItem(comment)}
         onDelete={() => onDelete({ id: comment.id, hasReplies: comment.replies.length > 0, isReply: false })}
         onReplyClick={currentUserId !== null ? () => setReplying(true) : undefined}
+        onOpenAuthor={onOpenAuthor}
       />
       <Box sx={{ pl: 6 }}>
         {comment.replies.map((reply) => (
@@ -91,6 +99,7 @@ export default function CommentThread({ comment, currentUserId, postAuthorId, on
             item={reply}
             canDelete={canDeleteItem(reply)}
             onDelete={() => onDelete({ id: reply.id, hasReplies: false, isReply: true })}
+            onOpenAuthor={onOpenAuthor}
           />
         ))}
         {replying && (
