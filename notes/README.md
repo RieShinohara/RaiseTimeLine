@@ -26,3 +26,4 @@ AIエンジニア養成コースの学習記録です。Claude Code と一緒に
 | [19-mybatis-xml-mappers.md](19-mybatis-xml-mappers.md) | MyBatis の SQL を XML に統一：アノテーション方式と XML 方式の比べ方、interface と XML を名前（namespace・id）で結ぶ、`<` を `&lt;` と書く、`<sql>`・`<include>` で列を使い回す、わざと壊して XML が使われていることを確かめる。**基礎の復習つき**：SQL・MyBatis・XML とは、.java と .xml の関係（メニュー表とレシピ）、`id` と `post_id`、JOIN、クラスとメソッド |
 | [20-follow-api.md](20-follow-api.md) | フォローの API：「誰が、誰を」の組の表（follower・followee）、二重・自分自身・相手が消えた場合を、DB の守りで止める（主キー・CHECK・外部キー）、いいねと同じ作りの再利用、わざと壊して数えるテストを確かめる |
 | [21-profile-api.md](21-profile-api.md) | プロフィールの API：GET と PUT で別の API、「本人だけ」をサーバーが守る（403）、`/me` を使わない理由、既存の処理を取り出して使い回す、応答に出してはいけない物（メール）、境界（50・51、160・161）でテストする、わざと壊す確認 |
+| [22-review-e.md](22-review-e.md) | 復習 E：SQL は人が書き MyBatis は運び屋、.java（メニュー）と .xml（レシピ）は名前の文字の一致でつながる、`id` と `post_id`、返す型 `List<…>` で 1 件か複数件かを見分ける、JOIN の `ON` はつなぎ目、クラスとメソッド・引数・`int` と `long`（`long` と `Long` の違い） |
