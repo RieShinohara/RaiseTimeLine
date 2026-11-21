@@ -8,11 +8,12 @@ import Link from '@mui/material/Link'
 import Snackbar from '@mui/material/Snackbar'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import { fetchUserPosts } from '../api/users'
 import { useAuth } from '../auth/useAuth'
 import PostCard from '../components/PostCard'
+import ProfileEditDialog from '../components/ProfileEditDialog'
 import { useProfile } from '../profile/useProfile'
 import { useInfiniteScroll } from '../timeline/useInfiniteScroll'
 import { useLikeToggle } from '../timeline/useLikeToggle'
@@ -26,10 +27,28 @@ export default function ProfilePage() {
 }
 
 function Profile({ username }: { username: string }) {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const navigate = useNavigate()
-  const { profile, loading, error, notFound, load, followPending, followError, toggleFollow, clearFollowError } =
-    useProfile(username)
+  const {
+    profile,
+    loading,
+    error,
+    notFound,
+    load,
+    followPending,
+    followError,
+    toggleFollow,
+    clearFollowError,
+    applyProfile,
+  } = useProfile(username)
+  // 編集のダイアログ。開くたびに editKey を増やして、新しく作り直す
+  const [editing, setEditing] = useState(false)
+  const [editKey, setEditKey] = useState(0)
+
+  function openEdit() {
+    setEditKey((n) => n + 1)
+    setEditing(true)
+  }
 
   const back = (
     <Link
@@ -109,6 +128,12 @@ function Profile({ username }: { username: string }) {
                 {profile.followedByMe ? 'フォロー解除' : 'フォロー'}
               </Button>
             )}
+            {/* 自分のプロフィールには、フォローの代わりに「編集」（本当の確認は、サーバーが行う。他の人のは 403） */}
+            {isMe && (
+              <Button variant="outlined" onClick={openEdit}>
+                編集
+              </Button>
+            )}
           </Box>
 
           {profile.bio && (
@@ -138,6 +163,21 @@ function Profile({ username }: { username: string }) {
           {followError}
         </Alert>
       </Snackbar>
+
+      {/* 開くたびに key を変えて、作り直す（前の入力が、残らないように） */}
+      {isMe && profile && (
+        <ProfileEditDialog
+          key={editKey}
+          open={editing}
+          profile={profile}
+          onClose={() => setEditing(false)}
+          onSaved={(saved) => {
+            applyProfile(saved)
+            // ヘッダーの自分の名前も、すぐ変える
+            updateUser({ displayName: saved.displayName })
+          }}
+        />
+      )}
     </Box>
   )
 }

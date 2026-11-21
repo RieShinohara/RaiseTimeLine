@@ -68,6 +68,11 @@ export function saveSession(session: { accessToken: string; refreshToken: string
   write(USER_INFO, JSON.stringify(session.user))
 }
 
+// ユーザー情報だけを保存し直す（プロフィールの編集で、表示名が変わったとき）
+export function saveUser(user: AuthUser): void {
+  write(USER_INFO, JSON.stringify(user))
+}
+
 export function saveAccessToken(accessToken: string): void {
   write(ACCESS_TOKEN, accessToken)
 }

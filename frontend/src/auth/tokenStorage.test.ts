@@ -1,5 +1,5 @@
 import { beforeEach, expect, test } from 'vitest'
-import { clearSession, getUser, saveSession } from './tokenStorage'
+import { clearSession, getUser, saveSession, saveUser } from './tokenStorage'
 
 // 保存したユーザー情報を読むときの、形の確認（品質チェック F2）。サンプルは、すべて架空
 const USER = { id: 1, email: 'demo@example.com', username: 'demo_user', displayName: 'デモ' }
@@ -11,6 +11,14 @@ beforeEach(() => {
 test('正しい形のユーザー情報は、そのまま読める', () => {
   saveSession({ accessToken: 'a', refreshToken: 'r', user: USER })
   expect(getUser()).toEqual(USER)
+})
+
+test('saveUser は、ユーザー情報だけを書き換える（札は、そのまま）', () => {
+  saveSession({ accessToken: 'a', refreshToken: 'r', user: USER })
+  saveUser({ ...USER, displayName: '新しい名前' })
+  expect(getUser()).toEqual({ ...USER, displayName: '新しい名前' })
+  expect(localStorage.getItem('accessToken')).toBe('a')
+  expect(localStorage.getItem('refreshToken')).toBe('r')
 })
 
 test('保存がなければ、null', () => {

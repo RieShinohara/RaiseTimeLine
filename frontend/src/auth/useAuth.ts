@@ -8,6 +8,8 @@ export interface AuthValue {
   user: AuthUser | null
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  // ログイン中の人の情報の一部を変える（プロフィールを編集したあと、ヘッダーの名前をすぐ変えるため）。保存も更新する
+  updateUser: (changes: Partial<Pick<AuthUser, 'displayName'>>) => void
 }
 
 export const AuthContext = createContext<AuthValue | null>(null)
