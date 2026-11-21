@@ -69,3 +69,29 @@ export async function unfollowUser(username: string): Promise<FollowState> {
   const res = await callWithLogin(`/api/users/${encodeURIComponent(username)}/follow`, { method: 'DELETE' })
   return (await res.json()) as FollowState
 }
+
+// フォロー中・フォロワーの一覧の 1 人分（メールは含まれない）。followedByMe：ログイン中の自分が、この人をフォローしているか
+// （ログインなし・自分自身の行は false）
+export interface FollowUser {
+  id: number
+  username: string
+  displayName: string
+  bio: string | null
+  followedByMe: boolean
+}
+
+// 一覧。サーバーは、フォローした日時の新しい順に、最初の 50 人まで返す。hasNext：50 人より先に、まだいるか
+export interface FollowUserPage {
+  users: FollowUser[]
+  hasNext: boolean
+}
+
+// その人を、フォローしている人（フォロワー）。ログインなしでも見られる。見つからなければ、status 404 の ApiError
+export function fetchFollowers(username: string): Promise<FollowUserPage> {
+  return getJson<FollowUserPage>(`/api/users/${encodeURIComponent(username)}/followers`)
+}
+
+// その人が、フォローしている人（フォロー中）
+export function fetchFollowing(username: string): Promise<FollowUserPage> {
+  return getJson<FollowUserPage>(`/api/users/${encodeURIComponent(username)}/following`)
+}

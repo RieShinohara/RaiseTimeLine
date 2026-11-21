@@ -1,6 +1,7 @@
 ﻿import Container from '@mui/material/Container'
 import { Route, Routes } from 'react-router-dom'
 import Header from './components/Header'
+import FollowListPage from './pages/FollowListPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import PostDetailPage from './pages/PostDetailPage'
@@ -17,6 +18,8 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/posts/:id" element={<PostDetailPage />} />
           <Route path="/users/:username" element={<ProfilePage />} />
+          <Route path="/users/:username/followers" element={<FollowListPage kind="followers" />} />
+          <Route path="/users/:username/following" element={<FollowListPage kind="following" />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Routes>

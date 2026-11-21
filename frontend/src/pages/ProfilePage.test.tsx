@@ -97,8 +97,8 @@ test('プロフィールと投稿の一覧が出る（ログインなしでも�
   expect(await screen.findByRole('heading', { name: '別の人' })).toBeInTheDocument()
   expect(screen.getByText('@other_user')).toBeInTheDocument()
   expect(screen.getByText(/自己紹介です。/)).toBeInTheDocument()
-  expect(screen.getByText('フォロー中').parentElement).toHaveTextContent('5 フォロー中')
-  expect(screen.getByText('フォロワー').parentElement).toHaveTextContent('3 フォロワー')
+  expect(screen.getByRole('link', { name: '5 フォロー中' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: '3 フォロワー' })).toBeInTheDocument()
   expect(await screen.findByText('別の人の投稿')).toBeInTheDocument()
   // ログインなしでも、フォローのボタンは出る（押すと、ログイン画面へ）
   expect(screen.getByRole('button', { name: '別の人をフォローする' })).toBeInTheDocument()
@@ -145,7 +145,7 @@ test('フォローすると、「フォロー解除」に変わり、フォロ�
   await user.click(await screen.findByRole('button', { name: '別の人をフォローする' }))
 
   expect(await screen.findByRole('button', { name: '別の人のフォローを解除する' })).toBeInTheDocument()
-  expect(screen.getByText('フォロワー').parentElement).toHaveTextContent('4 フォロワー')
+  expect(screen.getByRole('link', { name: '4 フォロワー' })).toBeInTheDocument()
   expect(followCalls()).toHaveLength(1)
   expect(followCalls()[0][1]).toMatchObject({ method: 'PUT' })
 })
@@ -161,7 +161,7 @@ test('フォロー解除すると、「フォロー」に戻り、フォロワ�
   await user.click(await screen.findByRole('button', { name: '別の人のフォローを解除する' }))
 
   expect(await screen.findByRole('button', { name: '別の人をフォローする' })).toBeInTheDocument()
-  expect(screen.getByText('フォロワー').parentElement).toHaveTextContent('2 フォロワー')
+  expect(screen.getByRole('link', { name: '2 フォロワー' })).toBeInTheDocument()
   expect(followCalls()[0][1]).toMatchObject({ method: 'DELETE' })
 })
 
@@ -175,7 +175,7 @@ test('フォローに失敗したときは、数と見た目は元のままで�
 
   expect(await screen.findByText(/うまくいきませんでした（ユーザーが見つかりません）/)).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '別の人をフォローする' })).toBeInTheDocument()
-  expect(screen.getByText('フォロワー').parentElement).toHaveTextContent('3 フォロワー')
+  expect(screen.getByRole('link', { name: '3 フォロワー' })).toBeInTheDocument()
 })
 
 test('返事が来るまでに連打しても、送るのは 1 回だけ', async () => {
