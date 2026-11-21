@@ -30,4 +30,35 @@
 		SELECT EXISTS (SELECT 1 FROM follows WHERE follower_id = #{followerId} AND followee_id = #{followeeId})
 	</select>
 
+	<!-- フォロワーの一覧：userId の人を、フォローしている人（follower_id 側）を、フォローした日時の新しい順に。
+	     同じ日時のときは、ユーザー id の大きい順（順番を、毎回同じにする）。
+	     取り出す列は、明示する（メール・パスワードのハッシュは、取り出さない） -->
+	<select id="findFollowers" resultType="com.example.raisetimeline.follow.FollowMapper$FollowUserRow">
+		SELECT u.id AS id, u.username AS username, u.display_name AS displayName, u.bio AS bio
+		FROM follows f
+		JOIN users u ON u.id = f.follower_id
+		WHERE f.followee_id = #{userId}
+		ORDER BY f.created_at DESC, u.id DESC
+		LIMIT #{limit}
+	</select>
+
+	<!-- フォロー中の一覧：userId の人が、フォローしている人（followee_id 側）を、新しい順に -->
+	<select id="findFollowing" resultType="com.example.raisetimeline.follow.FollowMapper$FollowUserRow">
+		SELECT u.id AS id, u.username AS username, u.display_name AS displayName, u.bio AS bio
+		FROM follows f
+		JOIN users u ON u.id = f.followee_id
+		WHERE f.follower_id = #{userId}
+		ORDER BY f.created_at DESC, u.id DESC
+		LIMIT #{limit}
+	</select>
+
+	<!-- 一覧用：followerId の人が、フォローしている人の id を、まとめて 1 回で調べる（N+1 を避ける）。
+	     followeeIds は、空にしない（IN () は、SQL の間違いになる）。呼ぶ側で確かめる -->
+	<select id="findFolloweeIds" resultType="long">
+		SELECT followee_id
+		FROM follows
+		WHERE follower_id = #{followerId} AND followee_id IN
+		<foreach collection="followeeIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+	</select>
+
 </mapper>
