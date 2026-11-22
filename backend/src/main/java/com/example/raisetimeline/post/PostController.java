@@ -45,6 +45,20 @@ public class PostController {
 		return postService.newCount(after, userId);
 	}
 
+	// 「フォロー中」のタイムライン：フォローしている人の投稿だけ。ログインが要る（TL-3）。
+	// 「/{id}」より具体的なので、こちらが先に選ばれる。ログイン必須のルールは SecurityConfig（そちらも先に書く）
+	@GetMapping("/following")
+	public PostPageResponse listFollowing(@RequestParam(required = false) Long before,
+			@RequestParam(defaultValue = "20") int size, @AuthenticationPrincipal Long userId) {
+		return postService.listFollowing(userId, before, size);
+	}
+
+	// 「フォロー中」の新着の件数（30 秒ごとの確認用）。ログインが要る
+	@GetMapping("/following/new-count")
+	public NewCountResponse newCountFollowing(@RequestParam long after, @AuthenticationPrincipal Long userId) {
+		return postService.newCountFollowing(userId, after);
+	}
+
 	// 投稿 1 件（詳細画面用）。ログインなしで見られる
 	@GetMapping("/{id}")
 	public PostResponse get(@PathVariable Long id, @AuthenticationPrincipal Long userId) {

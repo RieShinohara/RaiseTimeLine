@@ -35,6 +35,19 @@
 		LIMIT #{limit}
 	</select>
 
+	<!-- 「フォロー中」用：followerId の人が、フォローしている人の投稿だけ。findOlderThan に、follows 表との JOIN を足した形。
+	     JOIN は、follows の行（follower_id ＝ 自分）と、投稿の持ち主（followee_id ＝ p.user_id）を結ぶ。
+	     自分自身はフォローできない（CHECK 制約）ので、自分の投稿は入らない -->
+	<select id="findOlderThanFollowedBy" resultType="com.example.raisetimeline.post.Post">
+		SELECT <include refid="postColumns"/>
+		FROM posts p
+		JOIN users u ON u.id = p.user_id
+		JOIN follows f ON f.followee_id = p.user_id AND f.follower_id = #{followerId}
+		WHERE (#{before}::bigint IS NULL OR p.id &lt; #{before})
+		ORDER BY p.id DESC
+		LIMIT #{limit}
+	</select>
+
 	<select id="findById" resultType="com.example.raisetimeline.post.Post">
 		SELECT <include refid="postColumns"/>
 		FROM posts p
@@ -49,6 +62,14 @@
 	<!-- ログイン中の人は、自分の投稿を、新着に数えない -->
 	<select id="countNewerThanExcludingUser" resultType="long">
 		SELECT COUNT(*) FROM posts WHERE id &gt; #{after} AND user_id &lt;&gt; #{userId}
+	</select>
+
+	<!-- 「フォロー中」用：after より新しい、フォローしている人の投稿の件数（自分の投稿は、もともと入らない） -->
+	<select id="countNewerThanFollowedBy" resultType="long">
+		SELECT COUNT(*)
+		FROM posts p
+		JOIN follows f ON f.followee_id = p.user_id AND f.follower_id = #{followerId}
+		WHERE p.id &gt; #{after}
 	</select>
 
 	<!-- 本人の投稿だけを更新する（user_id も条件に入れる）。確認と更新の間に、投稿が消された・持ち主が違う場合は、0 件になる（B8） -->
