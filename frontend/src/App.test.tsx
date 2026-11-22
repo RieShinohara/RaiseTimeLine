@@ -30,11 +30,19 @@ async function fillRegisterForm(user: ReturnType<typeof userEvent.setup>, overri
     displayName: 'デモ',
     ...overrides,
   }
-  await user.type(screen.getByLabelText(/^メールアドレス/), v.email)
-  await user.type(screen.getByLabelText(/^パスワード(?!（確認）)/), v.password)
-  await user.type(screen.getByLabelText(/^パスワード（確認）/), v.confirm)
-  await user.type(screen.getByLabelText(/^ユーザー名/), v.username)
-  await user.type(screen.getByLabelText(/^表示名/), v.displayName)
+  await fillField(user, screen.getByLabelText(/^メールアドレス/), v.email)
+  await fillField(user, screen.getByLabelText(/^パスワード(?!（確認）)/), v.password)
+  await fillField(user, screen.getByLabelText(/^パスワード（確認）/), v.confirm)
+  await fillField(user, screen.getByLabelText(/^ユーザー名/), v.username)
+  await fillField(user, screen.getByLabelText(/^表示名/), v.displayName)
+}
+
+// 1 つの欄に、値を入れる。`user.type` は 1 文字ずつ打つので、5 欄で約 50 回のキー入力になり、
+// テスト全体を並べて動かすと、遅くなって 5 秒の制限を超えることがあった（品質チェック F20）。
+// 欄を押して、貼り付けなら、1 欄 1 回で済む。入力される中身は、同じ
+async function fillField(user: ReturnType<typeof userEvent.setup>, field: HTMLElement, value: string) {
+  await user.click(field)
+  await user.paste(value)
 }
 
 test('土台：アプリ名が表示される', () => {
