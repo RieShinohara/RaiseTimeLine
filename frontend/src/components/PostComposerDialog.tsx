@@ -7,6 +7,7 @@ import DialogTitle from '@mui/material/DialogTitle'
 import TextField from '@mui/material/TextField'
 import { useState, type FormEvent } from 'react'
 import { createPost, updatePost, type Post } from '../api/posts'
+import { useRestoreFocusOnClose } from './useRestoreFocusOnClose'
 
 // サーバーと同じ数え方（Java の文字数＝JavaScript の length。絵文字などは、2 文字分に数える）
 export const MAX_POST_LENGTH = 280
@@ -54,8 +55,20 @@ export default function PostComposerDialog({ open, onClose, onDone, editing }: P
     }
   }
 
+  // 新規投稿：閉じたあとの、フォーカスの戻しを、自分で行う（MUI の自動の戻しは、画面の本体の aria-hidden が外れる前に動いて、
+  // ブラウザが警告する。品質チェック F12・F21）。
+  // 編集：閉じるとすぐ部品ごと消える作り（HomePage の `{editing && …}`）で、今のままで、フォーカスは戻り、警告も出ない
+  // （本物のブラウザで確認済み）ので、MUI の自動の戻しに任せる
+  const restoreFocus = useRestoreFocusOnClose(open)
+
   return (
-    <Dialog open={open} onClose={submitting ? undefined : close} fullWidth maxWidth="sm">
+    <Dialog
+      {...(editing ? {} : restoreFocus)}
+      open={open}
+      onClose={submitting ? undefined : close}
+      fullWidth
+      maxWidth="sm"
+    >
       <form onSubmit={handleSubmit} noValidate>
         <DialogTitle>{editing ? '投稿を編集' : '投稿する'}</DialogTitle>
         <DialogContent>
