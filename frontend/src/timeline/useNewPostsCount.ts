@@ -8,7 +8,12 @@ export const POLL_INTERVAL_MS = 30_000
 // ・画面を見ていない間（別のタブなど）は、確かめない。戻ってきたら、すぐに 1 回確かめる
 // ・確かめるのに失敗しても、何も出さず、次の確認を待つ
 // ・after が変わる（1 ページ目を読み直す）と、件数は 0 に戻る（古い after の結果は、使わない）
-export function useNewPostsCount(after: number | null): number {
+// fetchCount：件数を調べる関数（省略すると「全体」。「フォロー中」は、fetchFollowingNewCount を渡す）。
+// 渡すときは、毎回同じ関数にする（変わると、確認を作り直す）
+export function useNewPostsCount(
+  after: number | null,
+  fetchCount: (after: number) => Promise<number> = fetchNewCount,
+): number {
   const [result, setResult] = useState<{ after: number; count: number } | null>(null)
 
   useEffect(() => {
@@ -19,7 +24,7 @@ export function useNewPostsCount(after: number | null): number {
     async function check() {
       if (document.visibilityState === 'hidden') return
       try {
-        const count = await fetchNewCount(base)
+        const count = await fetchCount(base)
         if (!cancelled) setResult({ after: base, count })
       } catch {
         // 静かに待つ。次の確認（30 秒後）で、また試す
@@ -36,7 +41,7 @@ export function useNewPostsCount(after: number | null): number {
       clearInterval(timer)
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [after])
+  }, [after, fetchCount])
 
   return result !== null && result.after === after ? result.count : 0
 }

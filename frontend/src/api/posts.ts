@@ -46,6 +46,20 @@ export async function fetchPosts(before?: number, size: number = PAGE_SIZE): Pro
   return (await res.json()) as PostPage
 }
 
+// 「フォロー中」のタイムラインを読む（フォローしている人の投稿だけ。自分の投稿は入らない）。形と使い方は fetchPosts と同じ。
+// ログインが要る。札の期限切れは、http.ts が 401 のときに自動で更新して、もう一度送る
+export async function fetchFollowingPosts(before?: number, size: number = PAGE_SIZE): Promise<PostPage> {
+  const query = before === undefined ? `size=${size}` : `before=${before}&size=${size}`
+  const res = await callWithLogin(`/api/posts/following?${query}`, {})
+  return (await res.json()) as PostPage
+}
+
+// 「フォロー中」の新着の件数（after より新しい、フォローしている人の投稿）。ログインが要る
+export async function fetchFollowingNewCount(after: number): Promise<number> {
+  const res = await callWithLogin(`/api/posts/following/new-count?after=${after}`, {})
+  return ((await res.json()) as { count: number }).count
+}
+
 // after（投稿 id）より新しい投稿の件数（新着の確認用）。ログイン中は、自分の投稿を数えない（サーバーが判断）
 export async function fetchNewCount(after: number): Promise<number> {
   // 札の期限が切れていると、サーバーは「ログインなし」として数える。先に更新しておく
