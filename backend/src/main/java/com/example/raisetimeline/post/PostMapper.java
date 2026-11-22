@@ -17,9 +17,16 @@ public interface PostMapper {
 	List<Post> findOlderThanByUserId(@Param("userId") Long userId, @Param("before") Long before,
 			@Param("limit") int limit);
 
+	// 「フォロー中」用：followerId の人が、フォローしている人の投稿だけ。使い方は findOlderThan と同じ
+	List<Post> findOlderThanFollowedBy(@Param("followerId") Long followerId, @Param("before") Long before,
+			@Param("limit") int limit);
+
 	Post findById(@Param("id") Long id);
 
 	long countNewerThan(@Param("after") long after);
+
+	// 「フォロー中」用：after より新しい、フォローしている人の投稿の件数
+	long countNewerThanFollowedBy(@Param("after") long after, @Param("followerId") Long followerId);
 
 	long countNewerThanExcludingUser(@Param("after") long after, @Param("userId") Long userId);
 

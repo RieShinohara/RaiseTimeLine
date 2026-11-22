@@ -35,6 +35,10 @@ public class SecurityConfig {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/auth/**").permitAll()
+						// 「フォロー中」は、ログインが要る（TL-3）。下の「/api/posts/{id}」（ログインなしで可）に、
+						// 「following」という文字が当てはまってしまうので、必ず、それより先に書く（上から順に当てはめる）
+						.requestMatchers(HttpMethod.GET, "/api/posts/following", "/api/posts/following/new-count")
+								.authenticated()
 						// タイムラインと新着の件数は、ログインなしで見られる（TL-3）。投稿・編集・削除は、ログインが要る
 						.requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/new-count").permitAll()
 						// 投稿 1 件とコメント一覧も、ログインなしで見られる。書く・消すは、ログインが要る

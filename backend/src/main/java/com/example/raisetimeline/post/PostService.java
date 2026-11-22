@@ -47,6 +47,25 @@ public class PostService {
 		return toPage(postMapper.findOlderThanByUserId(authorId, before, size + 1), size, userId);
 	}
 
+	// 「フォロー中」：userId の人が、フォローしている人の投稿だけ。見せ方は、list と同じ。
+	// ログインが要る（SecurityConfig で、先に 401 にする）
+	public PostPageResponse listFollowing(Long userId, Long before, int size) {
+		requireValidSize(size);
+		return toPage(postMapper.findOlderThanFollowedBy(userId, before, size + 1), size, userId);
+	}
+
+	// 「フォロー中」の新着の件数。after より新しい、フォローしている人の投稿の数
+	public NewCountResponse newCountFollowing(Long userId, long after) {
+		requireValidAfter(after);
+		return new NewCountResponse(postMapper.countNewerThanFollowedBy(after, userId));
+	}
+
+	private static void requireValidAfter(long after) {
+		if (after < 0) {
+			throw new ApiException(HttpStatus.BAD_REQUEST, "after は 0 以上で指定してください");
+		}
+	}
+
 	private static void requireValidSize(int size) {
 		if (size < 1 || size > MAX_SIZE) {
 			throw new ApiException(HttpStatus.BAD_REQUEST, "size は 1〜" + MAX_SIZE + " で指定してください");
@@ -94,9 +113,7 @@ public class PostService {
 	// after より新しい（id が大きい）投稿の件数。ログイン中なら、自分の投稿は数えない
 	// （自分が投稿したときは、一番上にすぐ出るため）
 	public NewCountResponse newCount(long after, Long userId) {
-		if (after < 0) {
-			throw new ApiException(HttpStatus.BAD_REQUEST, "after は 0 以上で指定してください");
-		}
+		requireValidAfter(after);
 		long count = userId == null
 				? postMapper.countNewerThan(after)
 				: postMapper.countNewerThanExcludingUser(after, userId);
