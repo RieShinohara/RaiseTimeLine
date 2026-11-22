@@ -123,7 +123,11 @@ test('「フォロー中」が空のときは、案内を出す（「まだ投�
   await screen.findByText('全体の投稿')
 
   await user.click(screen.getByRole('tab', { name: 'フォロー中' }))
-  expect(await screen.findByText('フォローしている人の投稿は、まだありません')).toBeInTheDocument()
+  expect(
+    await screen.findByText(
+      'フォローしている人の投稿は、まだありません。気になる人を、ユーザー検索で探して、フォローしてみましょう',
+    ),
+  ).toBeInTheDocument()
   expect(screen.queryByText('まだ投稿がありません')).not.toBeInTheDocument()
 })
 

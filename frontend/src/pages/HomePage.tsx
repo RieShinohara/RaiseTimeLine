@@ -141,7 +141,9 @@ function Timeline({ kind }: { kind: TimelineKind }) {
       )}
       {!loading && !error && posts.length === 0 && !hasNext && (
         <Typography color="text.secondary" align="center" sx={{ py: 4 }}>
-          {kind === 'following' ? 'フォローしている人の投稿は、まだありません' : 'まだ投稿がありません'}
+          {kind === 'following'
+            ? 'フォローしている人の投稿は、まだありません。気になる人を、ユーザー検索で探して、フォローしてみましょう'
+            : 'まだ投稿がありません'}
         </Typography>
       )}
       {!hasNext && posts.length > 0 && (

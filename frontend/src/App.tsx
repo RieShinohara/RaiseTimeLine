@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage'
 import PostDetailPage from './pages/PostDetailPage'
 import ProfilePage from './pages/ProfilePage'
 import RegisterPage from './pages/RegisterPage'
+import SearchPage from './pages/SearchPage'
 
 // 画面の枠（ヘッダー）と、URL ごとの画面。ログイン状態は、main.tsx の AuthProvider が持つ
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/users/:username" element={<ProfilePage />} />
           <Route path="/users/:username/followers" element={<FollowListPage kind="followers" />} />
           <Route path="/users/:username/following" element={<FollowListPage kind="following" />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Routes>
