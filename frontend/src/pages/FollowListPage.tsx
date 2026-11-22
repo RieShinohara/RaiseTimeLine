@@ -1,10 +1,7 @@
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import Alert from '@mui/material/Alert'
-import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
 import CircularProgress from '@mui/material/CircularProgress'
 import Link from '@mui/material/Link'
 import Snackbar from '@mui/material/Snackbar'
@@ -12,7 +9,7 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
-import AuthorName from '../components/AuthorName'
+import UserCard from '../components/UserCard'
 import { useFollowList, type FollowListKind } from '../profile/useFollowList'
 
 // 「何人まで表示するか」の目安の文言（サーバーが返す上限。docs/features/07-profile-follow.md の 8）
@@ -87,56 +84,17 @@ function FollowList({ kind, username }: { kind: FollowListKind; username: string
       )}
 
       <Stack spacing={2} component="ul" sx={{ p: 0, m: 0, listStyle: 'none' }}>
-        {users.map((u) => {
-          // 自分の行には、フォローのボタンを出さない（本当の確認は、サーバーが行う。自分自身は 400）
-          const isMe = user !== null && user.id === u.id
-          return (
-            <Card key={u.id} component="li" variant="outlined">
-              <CardContent sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
-                {/* アイコン画像は、S3 のときに作る。それまでは、表示名の頭文字 */}
-                <Avatar aria-hidden>{Array.from(u.displayName)[0] ?? '?'}</Avatar>
-                <Box sx={{ minWidth: 0, flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex' }}>
-                    <AuthorName
-                      displayName={u.displayName}
-                      username={u.username}
-                      onOpen={(name) => void navigate(`/users/${encodeURIComponent(name)}`)}
-                    />
-                  </Box>
-                  {u.bio && (
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        mt: 0.5,
-                        overflowWrap: 'anywhere',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {u.bio}
-                    </Typography>
-                  )}
-                </Box>
-                {!isMe && (
-                  <Button
-                    size="small"
-                    variant={u.followedByMe ? 'outlined' : 'contained'}
-                    disabled={pendingNames.has(u.username)}
-                    aria-label={
-                      u.followedByMe ? `${u.displayName}のフォローを解除する` : `${u.displayName}をフォローする`
-                    }
-                    // ログインなしで押されたら、ログインの画面へ案内する（フォローは、ログインが要る）
-                    onClick={user ? () => void toggleFollow(u) : () => void navigate('/login')}
-                  >
-                    {u.followedByMe ? 'フォロー解除' : 'フォロー'}
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )
-        })}
+        {users.map((u) => (
+          <UserCard
+            key={u.id}
+            person={u}
+            isMe={user !== null && user.id === u.id}
+            pending={pendingNames.has(u.username)}
+            // ログインなしで押されたら、ログインの画面へ案内する（フォローは、ログインが要る）
+            onToggleFollow={user ? (p) => void toggleFollow(p) : () => void navigate('/login')}
+            onOpenProfile={(name) => void navigate(`/users/${encodeURIComponent(name)}`)}
+          />
+        ))}
       </Stack>
 
       {hasNext && (

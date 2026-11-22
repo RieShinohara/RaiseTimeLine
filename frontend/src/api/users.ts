@@ -91,6 +91,12 @@ export function fetchFollowers(username: string): Promise<FollowUserPage> {
   return getJson<FollowUserPage>(`/api/users/${encodeURIComponent(username)}/followers`)
 }
 
+// ユーザー検索（ユーザー名か表示名に、q を含む人。大文字小文字を区別しない）。ログインなしでも使える。
+// サーバーは、ユーザー名の順に、最初の 20 人まで返す。q が空・50 文字超だと、status 400 の ApiError
+export function searchUsers(q: string): Promise<FollowUserPage> {
+  return getJson<FollowUserPage>(`/api/users?q=${encodeURIComponent(q)}`)
+}
+
 // その人が、フォローしている人（フォロー中）
 export function fetchFollowing(username: string): Promise<FollowUserPage> {
   return getJson<FollowUserPage>(`/api/users/${encodeURIComponent(username)}/following`)
