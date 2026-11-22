@@ -26,6 +26,18 @@
 		UPDATE users SET display_name = #{displayName}, bio = #{bio} WHERE id = #{id}
 	</update>
 
+	<!-- ユーザー検索：ユーザー名か表示名に、pattern が当てはまる人（ILIKE ＝ 大文字小文字を区別しない LIKE）。
+	     pattern は、呼ぶ側（UserSearchService）が「%入力%」の形にして、入力の中の \ % _ は、文字として扱うよう、前に \ を付けてある
+	     （ESCAPE '\' は、その目印）。値は #{} で渡す（${} は、SQL インジェクションの元なので使わない）。
+	     ユーザー名の順（大文字小文字を無視。同じなら id）。取り出す列は明示（メール・パスワードのハッシュは、取り出さない） -->
+	<select id="search" resultType="com.example.raisetimeline.auth.UserMapper$UserSearchRow">
+		SELECT id, username, display_name AS displayName, bio
+		FROM users
+		WHERE username ILIKE #{pattern} ESCAPE '\' OR display_name ILIKE #{pattern} ESCAPE '\'
+		ORDER BY lower(username), id
+		LIMIT #{limit}
+	</select>
+
 	<select id="existsByEmail" resultType="boolean">
 		SELECT COUNT(*) &gt; 0 FROM users WHERE email = #{email}
 	</select>

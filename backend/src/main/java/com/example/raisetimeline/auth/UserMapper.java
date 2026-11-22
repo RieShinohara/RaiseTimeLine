@@ -1,5 +1,7 @@
 package com.example.raisetimeline.auth;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -16,6 +18,13 @@ public interface UserMapper {
 	User findByUsername(@Param("username") String username);
 
 	int updateProfile(@Param("id") Long id, @Param("displayName") String displayName, @Param("bio") String bio);
+
+	// 検索結果の 1 行分（ユーザーの、見せてよい項目だけ。メールは入れない）
+	record UserSearchRow(Long id, String username, String displayName, String bio) {
+	}
+
+	// ユーザー検索。pattern は LIKE の形（呼ぶ側が、%入力% にして、\ % _ をエスケープ済み）。ユーザー名の順に、limit 件まで
+	List<UserSearchRow> search(@Param("pattern") String pattern, @Param("limit") int limit);
 
 	boolean existsByEmail(@Param("email") String email);
 
